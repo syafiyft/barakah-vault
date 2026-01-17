@@ -58,7 +58,27 @@ function CryptoCalculator() {
     const [method, setMethod] = useState('market')
     const [holdings, setHoldings] = useState({ btc: '', eth: '' })
 
-    const prices = { btc: 200000, eth: 15000 }
+    const [prices, setPrices] = useState({ btc: 200000, eth: 15000 })
+    const [loading, setLoading] = useState(true)
+
+    // Fetch live prices on mount
+    useState(() => {
+        const fetchPrices = async () => {
+            try {
+                const res = await fetch('/api/prices')
+                const data = await res.json()
+                if (data.btc && data.eth) {
+                    setPrices({ btc: data.btc, eth: data.eth })
+                }
+            } catch (error) {
+                console.error('Failed to load prices:', error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchPrices()
+    }, [])
+
     const btcValue = (parseFloat(holdings.btc) || 0) * prices.btc
     const ethValue = (parseFloat(holdings.eth) || 0) * prices.eth
     const totalCrypto = btcValue + ethValue
@@ -94,12 +114,12 @@ function CryptoCalculator() {
                 <h3 className="text-lg font-semibold text-white mb-4">Your Crypto Holdings</h3>
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm text-dark-400 mb-2">Bitcoin (BTC) <span className="text-xs text-dark-500">~RM {prices.btc.toLocaleString()}</span></label>
+                        <label className="block text-sm text-dark-400 mb-2">Bitcoin (BTC) <span className="text-xs text-dark-500">{loading ? 'Loading...' : `~RM ${prices.btc.toLocaleString()}`}</span></label>
                         <input type="number" value={holdings.btc} onChange={(e) => setHoldings(p => ({ ...p, btc: e.target.value }))} placeholder="e.g. 0.5" className="input-field" />
                         <p className="text-sm text-gold-400 mt-1">= RM {btcValue.toLocaleString()}</p>
                     </div>
                     <div>
-                        <label className="block text-sm text-dark-400 mb-2">Ethereum (ETH) <span className="text-xs text-dark-500">~RM {prices.eth.toLocaleString()}</span></label>
+                        <label className="block text-sm text-dark-400 mb-2">Ethereum (ETH) <span className="text-xs text-dark-500">{loading ? 'Loading...' : `~RM ${prices.eth.toLocaleString()}`}</span></label>
                         <input type="number" value={holdings.eth} onChange={(e) => setHoldings(p => ({ ...p, eth: e.target.value }))} placeholder="e.g. 5" className="input-field" />
                         <p className="text-sm text-gold-400 mt-1">= RM {ethValue.toLocaleString()}</p>
                     </div>
