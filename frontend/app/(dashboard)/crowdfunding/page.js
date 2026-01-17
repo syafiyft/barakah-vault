@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Search, Award, Users, Clock, Mosque, GraduationCap, Home, HeartHandshake } from 'lucide-react'
+import { Search, Award, Users, Clock, Landmark, GraduationCap, Home, HeartHandshake } from 'lucide-react'
 
 const projects = [
-    { id: 1, title: 'Build Community Masjid in Kelantan', description: 'A new masjid to serve 5,000+ Muslims.', category: 'Masjid', icon: Mosque, goal: 500000, raised: 320000, backers: 456, daysLeft: 45, verified: true },
+    { id: 1, title: 'Build Community Masjid in Kelantan', description: 'A new masjid to serve 5,000+ Muslims.', category: 'Masjid', icon: Landmark, goal: 500000, raised: 320000, backers: 456, daysLeft: 45, verified: true },
     { id: 2, title: 'Islamic School - Selangor', description: 'Establish a tahfiz center for 200 students.', category: 'Education', icon: GraduationCap, goal: 300000, raised: 225000, backers: 234, daysLeft: 30, verified: true },
     { id: 3, title: 'Orphanage Renovation - Johor', description: 'Renovate orphanage for 50 more children.', category: 'Welfare', icon: Home, goal: 150000, raised: 67500, backers: 189, daysLeft: 60, verified: true },
     { id: 4, title: 'Free Medical Clinic - Pahang', description: 'Weekly free clinic for underprivileged.', category: 'Healthcare', icon: HeartHandshake, goal: 100000, raised: 45000, backers: 112, daysLeft: 90, verified: true },
