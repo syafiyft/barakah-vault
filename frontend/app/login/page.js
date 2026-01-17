@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, Sparkles } from 'lucide-react'
-import { useGoogleLogin } from '@react-oauth/google'
+import { signIn } from 'next-auth/react'
 
 export default function Login() {
     const [email, setEmail] = useState('')
@@ -13,18 +13,29 @@ export default function Login() {
     const [loading, setLoading] = useState(false)
     const router = useRouter()
 
-    const loginWithGoogle = useGoogleLogin({
-        onSuccess: (tokenResponse) => {
-            console.log('Google Login Success:', tokenResponse)
-            router.push('/')
-        },
-        onError: () => console.log('Google Login Failed'),
-    })
-
     const handleSubmit = async (e) => {
         e.preventDefault()
         setLoading(true)
-        setTimeout(() => { setLoading(false); router.push('/') }, 1000)
+
+        try {
+            const result = await signIn('credentials', {
+                email,
+                password,
+                redirect: false
+            })
+
+            if (result?.error) {
+                console.error('Login failed:', result.error)
+                // You could add an error state here to show to user
+            } else {
+                router.push('/')
+                router.refresh()
+            }
+        } catch (error) {
+            console.error('Login error:', error)
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
@@ -86,7 +97,7 @@ export default function Login() {
 
                     <div className="space-y-3">
                         <button
-                            onClick={() => loginWithGoogle()}
+                            onClick={() => signIn('google', { callbackUrl: '/' })}
                             className="btn-secondary w-full flex items-center justify-center gap-2 bg-white text-dark-900 hover:bg-gray-100 border-none transition-colors"
                         >
                             <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />

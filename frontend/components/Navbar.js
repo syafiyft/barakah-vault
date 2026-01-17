@@ -1,8 +1,12 @@
 'use client'
 
+import { useSession } from 'next-auth/react'
 import { Bell, Search, User, Wallet } from 'lucide-react'
 
 export default function Navbar() {
+    const { data: session } = useSession()
+    const firstName = session?.user?.name?.split(' ')[0] || 'User'
+
     return (
         <header className="h-16 bg-dark-900/50 backdrop-blur-xl border-b border-dark-700/50 flex items-center justify-between px-6 sticky top-0 z-40">
             <div className="relative w-96">
@@ -27,7 +31,7 @@ export default function Navbar() {
 
                 <div className="flex items-center gap-3 pl-4 border-l border-dark-700">
                     <div className="text-right">
-                        <p className="text-sm font-medium text-white">Ahmad</p>
+                        <p className="text-sm font-medium text-white">{firstName}</p>
                         <p className="text-xs text-dark-400">Premium User</p>
                     </div>
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-gold-500 flex items-center justify-center">

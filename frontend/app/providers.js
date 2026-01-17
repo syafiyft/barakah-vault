@@ -1,13 +1,11 @@
 'use client'
 
-import { GoogleOAuthProvider } from '@react-oauth/google'
-
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'demo-client-id'
+import { SessionProvider } from "next-auth/react"
 
 export function Providers({ children }) {
     return (
-        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <SessionProvider>
             {children}
-        </GoogleOAuthProvider>
+        </SessionProvider>
     )
 }
