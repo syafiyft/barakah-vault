@@ -1,5 +1,6 @@
 'use client'
 
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { TrendingUp, Calculator, Heart, Award, ArrowUpRight, Star } from 'lucide-react'
 
@@ -20,13 +21,16 @@ function ScoreBadge({ score }) {
 }
 
 export default function Dashboard() {
+    const { data: session } = useSession()
+    const firstName = session?.user?.name?.split(' ')[0] || 'User'
+
     return (
         <div className="space-y-6">
             {/* Welcome */}
             <div className="glass-card">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-white mb-2">Assalamu'alaikum, Ahmad 👋</h1>
+                        <h1 className="text-2xl font-bold text-white mb-2">Assalamu'alaikum, {firstName} 👋</h1>
                         <p className="text-dark-300">Invest ethically. Calculate accurately. Give transparently.</p>
                     </div>
                     <div className="text-right">
