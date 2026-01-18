@@ -82,7 +82,7 @@ export default function Crowdfunding() {
             <div className="flex items-center gap-4">
                 <div className="relative flex-1 max-w-md">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
-                    <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search projects..." className="input-field pl-12" />
+                    <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search projects..." className="input-field !pl-12" />
                 </div>
                 <div className="flex items-center gap-2">
                     {categories.map((cat) => (
