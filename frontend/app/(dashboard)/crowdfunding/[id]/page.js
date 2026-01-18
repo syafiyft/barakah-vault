@@ -30,6 +30,7 @@ export default function ProjectDetail({ params }) {
     const [amount, setAmount] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [txHash, setTxHash] = useState(null)
+    const [tokenId, setTokenId] = useState(null)
 
     const handleContribute = async () => {
         if (!amount || isNaN(amount) || parseFloat(amount) <= 0) return
@@ -37,12 +38,33 @@ export default function ProjectDetail({ params }) {
         try {
             setIsLoading(true)
             setTxHash(null)
+            setTokenId(null)
             // Hardcoded project ID 1 and metadata URI for demo
             const tx = await contracts.crowdfunding.contribute(1, "ipfs://Qmd7...", {
                 value: ethers.parseEther(amount.toString())
             })
-            await tx.wait()
+            const receipt = await tx.wait()
             setTxHash(tx.hash)
+
+            // Find NFT Token ID from logs
+            // DonationReceipt emits Transfer(from, to, tokenId)
+            if (contracts.receipt) {
+                for (const log of receipt.logs) {
+                    try {
+                        // Check if log belongs to Receipt contract
+                        if (log.address.toLowerCase() === contracts.receipt.target.toLowerCase()) {
+                            const parsedLog = contracts.receipt.interface.parseLog(log);
+                            if (parsedLog && parsedLog.name === 'Transfer') {
+                                setTokenId(parsedLog.args[2].toString());
+                                break;
+                            }
+                        }
+                    } catch (e) {
+                        console.log("Log parse error:", e);
+                    }
+                }
+            }
+
             alert("Contribution successful! NFT Receipt minted.")
             setAmount('')
         } catch (err) {
@@ -195,6 +217,7 @@ export default function ProjectDetail({ params }) {
                     {txHash && (
                         <div className="mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center animate-in fade-in slide-in-from-top-2">
                             <p className="text-sm text-green-400 mb-1 font-medium">Verified on Blockchain!</p>
+                            {tokenId && <p className="text-xs text-green-500 mb-2">Receipt NFT #{tokenId} Minted</p>}
                             <a
                                 href={getExplorerLink(txHash)}
                                 target="_blank"
