@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Coins, Bitcoin, Info } from 'lucide-react'
 
-const NISAB_RM = 21250
+const NISAB_GRAMS = 85
 
 function TraditionalCalculator() {
     const [assets, setAssets] = useState({ goldWeight: '', goldType: '999', savings: '', stocks: '' })
@@ -32,11 +32,15 @@ function TraditionalCalculator() {
     }, [])
 
     const currentGoldPrice = prices[assets.goldType] || 0
+    // Dynamic Nisab: 85g * Price of 999 Gold
+    const nisabValue = NISAB_GRAMS * (prices['999'] || 0)
+
     const goldValue = (parseFloat(assets.goldWeight) || 0) * currentGoldPrice
     const savingsValue = parseFloat(assets.savings) || 0
     const stocksValue = parseFloat(assets.stocks) || 0
     const totalAssets = goldValue + savingsValue + stocksValue
-    const isAboveNisab = totalAssets >= NISAB_RM
+
+    const isAboveNisab = totalAssets >= nisabValue
     const zakatDue = isAboveNisab ? totalAssets * 0.025 : 0
 
     return (
@@ -96,8 +100,8 @@ function TraditionalCalculator() {
                         <p className="text-2xl font-bold text-white">RM {totalAssets.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
                     </div>
                     <div>
-                        <p className="text-sm text-dark-400">Nisab Threshold</p>
-                        <p className="text-lg font-semibold text-dark-300">RM {NISAB_RM.toLocaleString()}</p>
+                        <p className="text-sm text-dark-400">Nisab Threshold (85g Gold)</p>
+                        <p className="text-lg font-semibold text-dark-300">RM {nisabValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
                         <p className={`text-sm ${isAboveNisab ? 'text-primary-400' : 'text-dark-400'}`}>{isAboveNisab ? '✓ Above Nisab' : '✗ Below Nisab'}</p>
                     </div>
                     <div className="text-right">
@@ -111,10 +115,8 @@ function TraditionalCalculator() {
 }
 
 function CryptoCalculator() {
-    const [method, setMethod] = useState('market')
     const [holdings, setHoldings] = useState({ btc: '', eth: '' })
-
-    const [prices, setPrices] = useState({ btc: 200000, eth: 15000 })
+    const [prices, setPrices] = useState({ btc: 0, eth: 0, gold999: 0 })
     const [loading, setLoading] = useState(true)
 
     // Fetch live prices on mount
@@ -124,7 +126,11 @@ function CryptoCalculator() {
                 const res = await fetch('/api/prices')
                 const data = await res.json()
                 if (data.btc && data.eth) {
-                    setPrices({ btc: data.btc, eth: data.eth })
+                    setPrices({
+                        btc: data.btc,
+                        eth: data.eth,
+                        gold999: data.gold?.gram999 || 0
+                    })
                 }
             } catch (error) {
                 console.error('Failed to load prices:', error)
@@ -139,71 +145,62 @@ function CryptoCalculator() {
     const ethValue = (parseFloat(holdings.eth) || 0) * prices.eth
     const totalCrypto = btcValue + ethValue
 
-    const calculations = {
-        market: totalCrypto * 0.025,
-        trading: totalCrypto * 0.01,
-        mining: totalCrypto * 0.025,
-    }
+    // Crypto Nisab follows Gold Standard (85g)
+    const cryptoNisab = 85 * prices.gold999
+    const isAboveNisab = totalCrypto >= cryptoNisab
+    const zakatDue = isAboveNisab ? totalCrypto * 0.025 : 0
 
     return (
         <div className="space-y-6">
-            <div className="glass-card">
-                <h3 className="text-lg font-semibold text-white mb-4">Select Your Crypto Activity</h3>
-                <div className="grid grid-cols-3 gap-4">
-                    {[
-                        { id: 'market', label: 'HODL', desc: 'Long-term holding' },
-                        { id: 'trading', label: 'Active Trading', desc: 'Frequent buy/sell' },
-                        { id: 'mining', label: 'Mining/Staking', desc: 'Earn crypto rewards' },
-                    ].map((m) => (
-                        <button key={m.id} onClick={() => setMethod(m.id)} className={`p-4 rounded-xl border text-left transition-all ${method === m.id ? 'bg-primary-500/20 border-primary-500' : 'bg-dark-800/50 border-dark-700 hover:border-dark-600'}`}>
-                            <div className="flex items-center gap-2 mb-1">
-                                <span className={`w-3 h-3 rounded-full ${method === m.id ? 'bg-primary-500' : 'bg-dark-600'}`} />
-                                <span className="font-medium text-white">{m.label}</span>
-                            </div>
-                            <p className="text-sm text-dark-400">{m.desc}</p>
-                        </button>
-                    ))}
-                </div>
-            </div>
-
             <div className="glass-card">
                 <h3 className="text-lg font-semibold text-white mb-4">Your Crypto Holdings</h3>
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm text-dark-400 mb-2">Bitcoin (BTC) <span className="text-xs text-dark-500">{loading ? 'Loading...' : `~RM ${prices.btc.toLocaleString()}`}</span></label>
-                        <input type="number" value={holdings.btc} onChange={(e) => setHoldings(p => ({ ...p, btc: e.target.value }))} placeholder="e.g. 0.5" className="input-field" />
+                        <div className="relative">
+                            <Bitcoin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gold-500" />
+                            <input type="number" value={holdings.btc} onChange={(e) => setHoldings(p => ({ ...p, btc: e.target.value }))} placeholder="e.g. 0.5" className="input-field !pl-10" />
+                        </div>
                         <p className="text-sm text-gold-400 mt-1">= RM {btcValue.toLocaleString()}</p>
                     </div>
                     <div>
                         <label className="block text-sm text-dark-400 mb-2">Ethereum (ETH) <span className="text-xs text-dark-500">{loading ? 'Loading...' : `~RM ${prices.eth.toLocaleString()}`}</span></label>
-                        <input type="number" value={holdings.eth} onChange={(e) => setHoldings(p => ({ ...p, eth: e.target.value }))} placeholder="e.g. 5" className="input-field" />
+                        <div className="relative">
+                            <Coins className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-400" />
+                            <input type="number" value={holdings.eth} onChange={(e) => setHoldings(p => ({ ...p, eth: e.target.value }))} placeholder="e.g. 5" className="input-field !pl-10" />
+                        </div>
                         <p className="text-sm text-gold-400 mt-1">= RM {ethValue.toLocaleString()}</p>
                     </div>
                 </div>
-                <div className="mt-4 pt-4 border-t border-dark-700">
-                    <p className="text-sm text-dark-400">Total Crypto Value</p>
-                    <p className="text-2xl font-bold text-white">RM {totalCrypto.toLocaleString()}</p>
-                </div>
             </div>
 
-            <div className="glass-card">
-                <h3 className="text-lg font-semibold text-white mb-4">Zakat by Method</h3>
-                <div className="grid grid-cols-3 gap-4">
-                    {Object.entries(calculations).map(([key, value]) => (
-                        <div key={key} className={`p-4 rounded-xl ${method === key ? 'bg-primary-500/20 border-2 border-primary-500' : 'bg-dark-800/50 border border-dark-700'}`}>
-                            <h4 className="font-medium text-white mb-1 capitalize">{key} Method</h4>
-                            <p className="text-2xl font-bold text-gold-400">RM {value.toLocaleString()}</p>
-                        </div>
-                    ))}
+            <div className="glass-card bg-gradient-to-br from-primary-500/10 to-gold-500/10">
+                <div className="grid grid-cols-3 gap-6">
+                    <div>
+                        <p className="text-sm text-dark-400">Total Crypto Value</p>
+                        <p className="text-2xl font-bold text-white">RM {totalCrypto.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                    </div>
+                    <div>
+                        <p className="text-sm text-dark-400">Nisab Threshold (85g Gold)</p>
+                        <p className="text-lg font-semibold text-dark-300">RM {cryptoNisab.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                        <p className={`text-sm ${isAboveNisab ? 'text-primary-400' : 'text-dark-400'}`}>{isAboveNisab ? '✓ Above Nisab' : '✗ Below Nisab'}</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-sm text-dark-400">Zakat Due (2.5%)</p>
+                        <p className="text-3xl font-bold text-gold-400">RM {zakatDue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                    </div>
                 </div>
             </div>
 
             <div className="glass-card border-gold-500/30">
                 <div className="flex items-center gap-2 mb-2">
                     <Info className="w-5 h-5 text-gold-400" />
-                    <span className="font-medium text-gold-400">Disclaimer</span>
+                    <span className="font-medium text-gold-400">Scholar Note</span>
                 </div>
-                <p className="text-sm text-dark-300">Choose method based on your understanding and local scholar guidance. When in doubt, choose the method that results in HIGHER zakat.</p>
+                <p className="text-sm text-dark-300">
+                    Cryptocurrencies are generally treated as 'Urud al-Tijarah' (Trade Goods) or 'Nuqud' (Currency).
+                    Therefore, the standard 2.5% rate applies if the total value exceeds the value of 85g of Gold (Nisab).
+                </p>
             </div>
         </div>
     )
