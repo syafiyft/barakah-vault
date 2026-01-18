@@ -74,49 +74,78 @@ A transparent charitable giving platform built on trust.
 
 ### **Blockchain**
 
-- **Smart Contracts:** Solidity
-- **Network:** Polygon Testnet
+- **Framework:** Hardhat (Localhost for Dev)
+- **Smart Contracts:** Solidity (OpenZeppelin)
+- **Network:** Polygon Amoy (Planned for Production)
 
 ---
 
 ## 🚀 Getting Started
 
-Follow these instructions to set up the project locally.
+Follow these instructions to set up the full project (Blockchain + Frontend) locally.
 
 ### Prerequisites
 
 - Node.js (v18 or higher)
-- npm or yarn
+- MetaMask Extension installed in your browser
 
-### First Time Setup
+### 1. Blockchain Setup ⛓️
+
+We use a local Hardhat network to simulate the blockchain.
+
+**Terminal 1:** Start the local node
 
 ```bash
-# Clone the repository (if you haven't already)
-git clone <repository-url>
+cd blockchain
+npx hardhat node
+```
 
-# Navigate to the frontend directory
+_Keep this terminal running! It gives you 20 test accounts with fake ETH.*
+
+**Terminal 2:** Deploy Smart Contracts
+
+```bash
+cd blockchain
+# Deploy contracts and seed initial data
+npx hardhat run scripts/deploy.js --network localhost
+```
+
+_This will also automatically export the contract addresses to `frontend/utils/contracts.json`.*
+
+### 2. Frontend Setup 💻
+
+**Terminal 2 (or 3):** Start the web app
+
+```bash
 cd frontend
 
-# Install dependencies
+# Install dependencies (if first time)
 npm install
-```
 
-### Configuration
-
-Create a `.env.local` file in the `frontend` directory with the following variables:
-
-```env
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
-# Add other necessary env vars here
-```
-
-### How to Run
-
-Start the development server:
-
-```bash
-cd frontend
+# Start the dev server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser.
+
+### 3. MetaMask Configuration (Crucial!) 🦊
+
+To interact with the app, you must connect MetaMask to your local blockchain.
+
+1. **Add Network:**
+    - Open MetaMask -> Settings -> Networks -> Add Network -> Add a network manually.
+    - **Network Name:** Hardhat Localhost
+    - **RPC URL:** `http://127.0.0.1:8545/`
+    - **Chain ID:** `31337`
+    - **Currency Symbol:** `ETH`
+
+2. **Import Test Account:**
+    - Look at **Terminal 1** (`npx hardhat node` output).
+    - Copy the **Private Key** of Account #0 or #1.
+    - Metamask -> Accounts -> Import Account -> Paste Key.
+    - You should see **10,000 ETH** balance.
+
+3. **Connect & Play:**
+    - Go to the **Crowdfunding** page.
+    - Click **Connect Wallet**.
+    - Contribute to a project! 🚀
