@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Award, Users, Clock, CheckCircle, Circle, Play, Wallet, Loader2 } from 'lucide-react'
+import { ArrowLeft, Award, Users, Clock, CheckCircle, Circle, Play, Wallet, Loader2, ArrowUpRight } from 'lucide-react'
 import { useWeb3 } from '@/context/Web3Context'
 import { ethers } from 'ethers'
 
