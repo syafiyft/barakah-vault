@@ -1,7 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Award, Users, Clock, CheckCircle, Circle, Play, Wallet } from 'lucide-react'
+import { ArrowLeft, Award, Users, Clock, CheckCircle, Circle, Play, Wallet, Loader2 } from 'lucide-react'
+import { useWeb3 } from '@/context/Web3Context'
+import { ethers } from 'ethers'
 
 // Mock Data (replace with actual fetch in real app)
 const project = {
@@ -22,6 +25,40 @@ const project = {
 export default function ProjectDetail({ params }) {
     // In a real app, use params.id to fetch data
     const progress = (project.raised / project.goal) * 100
+
+    const { isConnected, connectWallet, contracts, account } = useWeb3()
+    const [amount, setAmount] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
+    const [txHash, setTxHash] = useState(null)
+
+    const handleContribute = async () => {
+        if (!amount || isNaN(amount) || parseFloat(amount) <= 0) return
+
+        try {
+            setIsLoading(true)
+            setTxHash(null)
+            // Hardcoded project ID 1 and metadata URI for demo
+            const tx = await contracts.crowdfunding.contribute(1, "ipfs://Qmd7...", {
+                value: ethers.parseEther(amount.toString())
+            })
+            await tx.wait()
+            setTxHash(tx.hash)
+            alert("Contribution successful! NFT Receipt minted.")
+            setAmount('')
+        } catch (err) {
+            console.error(err)
+            alert("Transaction failed: " + (err.reason || err.message))
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const getExplorerLink = (hash) => {
+        // Simple logic: if hash starts with 0x, assume it's valid.
+        // For Localhost, we can't link effectively.
+        // For Sepolia: https://sepolia.etherscan.io/tx/${hash}
+        return `https://sepolia.etherscan.io/tx/${hash}` // Default to Sepolia/Mainnet structure
+    }
 
     return (
         <div className="space-y-6">
@@ -115,17 +152,60 @@ export default function ProjectDetail({ params }) {
                 <div className="glass-card sticky top-24 h-fit">
                     <h2 className="text-lg font-semibold text-white mb-4">Contribute</h2>
                     <div className="mb-4">
-                        <label className="block text-sm text-dark-400 mb-2">Amount (RM)</label>
-                        <input type="number" placeholder="Enter amount" className="input-field" />
+                        <label className="block text-sm text-dark-400 mb-2">Amount (RM / ETH)</label>
+                        <input
+                            type="number"
+                            placeholder="Enter amount"
+                            className="input-field"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                        />
                         <div className="flex gap-2 mt-2">
-                            {[100, 500, 1000, 5000].map((amt) => (
-                                <button key={amt} className="flex-1 py-2 rounded-lg bg-dark-800 text-dark-300 text-sm hover:bg-dark-700 transition-colors">RM {amt}</button>
+                            {[0.01, 0.05, 0.1, 0.5].map((amt) => (
+                                <button
+                                    key={amt}
+                                    onClick={() => setAmount(amt.toString())}
+                                    className="flex-1 py-2 rounded-lg bg-dark-800 text-dark-300 text-sm hover:bg-dark-700 transition-colors"
+                                >
+                                    {amt} ETH
+                                </button>
                             ))}
                         </div>
                     </div>
-                    <button className="btn-primary w-full flex items-center justify-center gap-2">
-                        <Wallet className="w-5 h-5" /> Connect Wallet to Contribute
-                    </button>
+
+                    {!isConnected ? (
+                        <button
+                            onClick={connectWallet}
+                            className="btn-primary w-full flex items-center justify-center gap-2"
+                        >
+                            <Wallet className="w-5 h-5" /> Connect Wallet to Contribute
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleContribute}
+                            disabled={isLoading || !amount}
+                            className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wallet className="w-5 h-5" />}
+                            {isLoading ? "Processing..." : "Contribute Now"}
+                        </button>
+                    )}
+                    {isConnected && <p className="text-xs text-dark-400 mt-2 text-center">Connected: {account.slice(0, 6)}...{account.slice(-4)}</p>}
+
+                    {txHash && (
+                        <div className="mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center animate-in fade-in slide-in-from-top-2">
+                            <p className="text-sm text-green-400 mb-1 font-medium">Verified on Blockchain!</p>
+                            <a
+                                href={getExplorerLink(txHash)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-green-300 hover:text-green-200 flex items-center justify-center gap-1"
+                            >
+                                View Transaction <ArrowUpRight className="w-3 h-3" />
+                            </a>
+                        </div>
+                    )}
+
                     <div className="mt-6 pt-6 border-t border-dark-700 space-y-2 text-sm">
                         {['All transactions on blockchain', 'NFT receipt for tax purposes', 'Milestone-based fund release'].map((t, i) => (
                             <div key={i} className="flex items-center gap-2 text-dark-400"><CheckCircle className="w-4 h-4 text-primary-400" />{t}</div>

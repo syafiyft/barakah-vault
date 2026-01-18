@@ -2,9 +2,11 @@
 
 import { useSession } from 'next-auth/react'
 import { Bell, Search, User, Wallet } from 'lucide-react'
+import { useWeb3 } from '@/context/Web3Context'
 
 export default function Navbar() {
     const { data: session } = useSession()
+    const { isConnected, connectWallet, disconnectWallet, account } = useWeb3()
     const firstName = session?.user?.name?.split(' ')[0] || 'User'
 
     return (
@@ -19,9 +21,15 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center gap-4">
-                <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-dark-800 border border-dark-700 hover:border-primary-500/50 transition-all text-dark-200 hover:text-white">
+                <button
+                    onClick={isConnected ? disconnectWallet : connectWallet}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${isConnected ? 'bg-primary-500/20 border-primary-500 text-primary-400 hover:bg-red-500/10 hover:border-red-500 hover:text-red-500' : 'bg-dark-800 border-dark-700 hover:border-primary-500/50 text-dark-200 hover:text-white'}`}
+                    title={isConnected ? "Click to Disconnect" : "Connect MetaMask"}
+                >
                     <Wallet className="w-4 h-4" />
-                    <span className="text-sm font-medium">Connect Wallet</span>
+                    <span className="text-sm font-medium">
+                        {isConnected ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Connect Wallet'}
+                    </span>
                 </button>
 
                 <button className="relative p-2 rounded-xl bg-dark-800 hover:bg-dark-700 transition-all">
