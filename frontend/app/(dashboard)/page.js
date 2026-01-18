@@ -5,9 +5,16 @@ import Link from 'next/link'
 import { TrendingUp, Calculator, Heart, Award, ArrowUpRight, Star } from 'lucide-react'
 
 const topCompanies = [
+    { symbol: 'TSLA', name: 'Tesla, Inc.', score: 88, industry: 'Automotive', change: '+5.4%' },
     { symbol: 'AAPL', name: 'Apple Inc.', score: 85, industry: 'Technology', change: '+2.3%' },
     { symbol: 'MSFT', name: 'Microsoft Corp.', score: 82, industry: 'Technology', change: '+1.8%' },
     { symbol: 'COST', name: 'Costco', score: 76, industry: 'Retail', change: '+0.5%' },
+    { symbol: 'GOOGL', name: 'Alphabet Inc.', score: 75, industry: 'Technology', change: '+1.2%' },
+    { symbol: 'NVDA', name: 'NVIDIA Corp.', score: 74, industry: 'Technology', change: '+3.1%' },
+    { symbol: 'AMZN', name: 'Amazon.com', score: 72, industry: 'Retail', change: '-0.4%' },
+    { symbol: 'ADBE', name: 'Adobe Inc.', score: 70, industry: 'Technology', change: '+0.8%' },
+    { symbol: 'INTC', name: 'Intel Corp.', score: 68, industry: 'Technology', change: '-1.5%' },
+    { symbol: 'META', name: 'Meta Platforms', score: 65, industry: 'Technology', change: '+2.1%' },
 ]
 
 const featuredProjects = [
@@ -26,7 +33,9 @@ export default function Dashboard() {
 
     return (
         <div className="space-y-6">
-            {/* Welcome */}
+            {/* Same Welcome & Stats ... */}
+            {/* ... */}
+
             <div className="glass-card">
                 <div className="flex items-center justify-between">
                     <div>
@@ -64,8 +73,8 @@ export default function Dashboard() {
             {/* Main Grid */}
             <div className="grid grid-cols-3 gap-6">
                 {/* Top Companies */}
-                <div className="col-span-2 glass-card">
-                    <div className="flex items-center justify-between mb-6">
+                <div className="col-span-2 glass-card flex flex-col h-[420px]">
+                    <div className="flex items-center justify-between mb-6 shrink-0">
                         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                             <TrendingUp className="w-5 h-5 text-primary-400" />
                             Top Maqasid-Rated Companies
@@ -75,10 +84,10 @@ export default function Dashboard() {
                         </Link>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
                         {topCompanies.map((company, i) => (
                             <div key={company.symbol} className="flex items-center gap-4 p-4 rounded-xl bg-dark-800/50 hover:bg-dark-800 transition-all cursor-pointer">
-                                <span className="text-lg font-bold text-dark-500 w-6">{i + 1}</span>
+                                <span className={`text-lg font-bold w-6 ${i < 3 ? 'text-gold-400' : 'text-dark-500'}`}>{i + 1}</span>
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2">
                                         <h3 className="font-semibold text-white">{company.name}</h3>
