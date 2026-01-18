@@ -6,9 +6,33 @@ import { Coins, Bitcoin, Info } from 'lucide-react'
 const NISAB_RM = 21250
 
 function TraditionalCalculator() {
-    const [assets, setAssets] = useState({ goldWeight: '', goldPrice: '250', savings: '', stocks: '' })
+    const [assets, setAssets] = useState({ goldWeight: '', goldType: '999', savings: '', stocks: '' })
+    const [prices, setPrices] = useState({ 999: 380, 916: 348 }) // Fallback initial
+    const [loading, setLoading] = useState(true)
 
-    const goldValue = (parseFloat(assets.goldWeight) || 0) * (parseFloat(assets.goldPrice) || 0)
+    // Fetch live prices
+    useState(() => {
+        const fetchPrices = async () => {
+            try {
+                const res = await fetch('/api/prices')
+                const data = await res.json()
+                if (data.gold) {
+                    setPrices({
+                        999: data.gold.gram999,
+                        916: data.gold.gram916
+                    })
+                }
+            } catch (error) {
+                console.error('Failed to load prices:', error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchPrices()
+    }, [])
+
+    const currentGoldPrice = prices[assets.goldType] || 0
+    const goldValue = (parseFloat(assets.goldWeight) || 0) * currentGoldPrice
     const savingsValue = parseFloat(assets.savings) || 0
     const stocksValue = parseFloat(assets.stocks) || 0
     const totalAssets = goldValue + savingsValue + stocksValue
@@ -19,17 +43,49 @@ function TraditionalCalculator() {
         <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
                 <div className="glass-card">
-                    <label className="block text-sm font-medium text-dark-300 mb-2">Gold (grams)</label>
-                    <input type="number" value={assets.goldWeight} onChange={(e) => setAssets(p => ({ ...p, goldWeight: e.target.value }))} placeholder="e.g. 100" className="input-field" />
-                    <p className="text-sm text-gold-400 mt-2">= RM {goldValue.toLocaleString()}</p>
+                    <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-dark-300">Gold (grams)</label>
+                        <div className="flex gap-2">
+                            {['999', '916'].map(type => (
+                                <button
+                                    key={type}
+                                    onClick={() => setAssets(p => ({ ...p, goldType: type }))}
+                                    className={`text-xs px-2 py-1 rounded border ${assets.goldType === type ? 'bg-gold-500/20 border-gold-500 text-gold-400' : 'border-dark-600 text-dark-400'}`}
+                                >
+                                    {type}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="relative">
+                        <input
+                            type="number"
+                            value={assets.goldWeight}
+                            onChange={(e) => setAssets(p => ({ ...p, goldWeight: e.target.value }))}
+                            placeholder="e.g. 100"
+                            className="input-field"
+                        />
+                    </div>
+                    <div className="flex justify-between items-center mt-2">
+                        <p className="text-sm text-gold-400 font-medium">Value: RM {goldValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                        <p className="text-xs text-dark-400">
+                            {loading ? 'Fetching...' : `Rate: RM ${currentGoldPrice.toFixed(2)}/g`}
+                        </p>
+                    </div>
                 </div>
                 <div className="glass-card">
                     <label className="block text-sm font-medium text-dark-300 mb-2">Savings (RM)</label>
-                    <input type="number" value={assets.savings} onChange={(e) => setAssets(p => ({ ...p, savings: e.target.value }))} placeholder="e.g. 15000" className="input-field" />
+                    <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400 font-medium">RM</span>
+                        <input type="number" value={assets.savings} onChange={(e) => setAssets(p => ({ ...p, savings: e.target.value }))} placeholder="15000" className="input-field !pl-12" />
+                    </div>
                 </div>
                 <div className="glass-card">
                     <label className="block text-sm font-medium text-dark-300 mb-2">Halal Stocks (RM)</label>
-                    <input type="number" value={assets.stocks} onChange={(e) => setAssets(p => ({ ...p, stocks: e.target.value }))} placeholder="e.g. 50000" className="input-field" />
+                    <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400 font-medium">RM</span>
+                        <input type="number" value={assets.stocks} onChange={(e) => setAssets(p => ({ ...p, stocks: e.target.value }))} placeholder="50000" className="input-field !pl-12" />
+                    </div>
                 </div>
             </div>
 
@@ -37,7 +93,7 @@ function TraditionalCalculator() {
                 <div className="grid grid-cols-3 gap-6">
                     <div>
                         <p className="text-sm text-dark-400">Total Assets</p>
-                        <p className="text-2xl font-bold text-white">RM {totalAssets.toLocaleString()}</p>
+                        <p className="text-2xl font-bold text-white">RM {totalAssets.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
                     </div>
                     <div>
                         <p className="text-sm text-dark-400">Nisab Threshold</p>
@@ -46,7 +102,7 @@ function TraditionalCalculator() {
                     </div>
                     <div className="text-right">
                         <p className="text-sm text-dark-400">Zakat Due (2.5%)</p>
-                        <p className="text-3xl font-bold text-gold-400">RM {zakatDue.toLocaleString()}</p>
+                        <p className="text-3xl font-bold text-gold-400">RM {zakatDue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
                     </div>
                 </div>
             </div>
