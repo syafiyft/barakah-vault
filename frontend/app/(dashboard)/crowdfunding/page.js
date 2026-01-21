@@ -26,7 +26,7 @@ const projects = [
         backers: 456,
         daysLeft: 45,
         verified: true,
-        image: 'https://images.unsplash.com/photo-1564769625673-cb8e7721bc6b?w=800&q=80'
+        image: 'https://images.unsplash.com/photo-1585036156171-384164a8c675?w=800&q=80'
     },
     {
         id: 2,

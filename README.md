@@ -149,3 +149,38 @@ To interact with the app, you must connect MetaMask to your local blockchain.
     - Go to the **Crowdfunding** page.
     - Click **Connect Wallet**.
     - Contribute to a project! 🚀
+
+---
+
+## 📈 New Features (v2.1)
+
+### **4. Portfolio Tracking** 📊
+
+Track your halal investments in one place.
+
+- **Stock Positions:** Add and manage your stock holdings
+- **Real-time Prices:** Live price updates via Stock API
+- **Performance Analytics:** Track gains/losses and portfolio value
+- **Maqasid Integration:** See Maqasid scores for your holdings
+
+### **5. Market Data APIs** 📰
+
+Stay informed with integrated market data.
+
+- **Stock API:** Real-time stock prices and company information
+- **News API:** Islamic finance news and market updates
+- **Search:** Find stocks by symbol or company name
+
+---
+
+## 📅 Development Progress
+
+| Day | Focus | Status |
+|-----|-------|--------|
+| Day 1 (Jan 20) | Foundation & Auth | ✅ Complete |
+| Day 2 (Jan 21) | Zakat & Crowdfunding | ✅ Complete |
+| Day 3 (Jan 22) | Portfolio & Polish | ✅ Complete |
+
+---
+
+*Last Updated: January 22, 2026*

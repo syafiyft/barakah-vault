@@ -26,7 +26,7 @@ const project = {
     backers: 456,
     daysLeft: 45,
     verified: true,
-    image: 'https://images.unsplash.com/photo-1564769625673-cb8e7721bc6b?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1585036156171-384164a8c675?w=800&q=80',
     shariaBoard: [
         { name: 'Sheikh Ahmad bin Abdullah', title: 'Senior Scholar, JAKIM', approved: true },
         { name: 'Ustaz Muhammad Hasan', title: 'Mufti, Kelantan', approved: true },
