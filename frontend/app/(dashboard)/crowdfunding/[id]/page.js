@@ -6,9 +6,27 @@ import { ArrowLeft, Award, Users, Clock, CheckCircle, Circle, Play, Wallet, Load
 import { useWeb3 } from '@/context/Web3Context'
 import { ethers } from 'ethers'
 
+// Default images by category
+const categoryImages = {
+    Masjid: 'https://images.unsplash.com/photo-1585036156171-384164a8c675?w=800&q=80',
+    Education: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80',
+    Welfare: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&q=80',
+    Healthcare: 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=800&q=80',
+    default: 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800&q=80',
+}
+
 // Mock Data (replace with actual fetch in real app)
 const project = {
-    id: 1, title: 'Build Community Masjid in Kelantan', description: 'A new masjid to serve 5,000+ Muslims in Kampung Baru.', category: 'Masjid', goal: 500000, raised: 320000, backers: 456, daysLeft: 45, verified: true,
+    id: 1,
+    title: 'Build Community Masjid in Kelantan',
+    description: 'A new masjid to serve 5,000+ Muslims in Kampung Baru. This project includes a prayer hall for 1,000 people, ablution facilities, and a community center for Islamic education and community gatherings.',
+    category: 'Masjid',
+    goal: 500000,
+    raised: 320000,
+    backers: 456,
+    daysLeft: 45,
+    verified: true,
+    image: 'https://images.unsplash.com/photo-1564769625673-cb8e7721bc6b?w=800&q=80',
     shariaBoard: [
         { name: 'Sheikh Ahmad bin Abdullah', title: 'Senior Scholar, JAKIM', approved: true },
         { name: 'Ustaz Muhammad Hasan', title: 'Mufti, Kelantan', approved: true },
@@ -82,26 +100,39 @@ export default function ProjectDetail({ params }) {
         return `https://sepolia.etherscan.io/tx/${hash}` // Default to Sepolia/Mainnet structure
     }
 
+    const imageUrl = project.image || categoryImages[project.category] || categoryImages.default
+
     return (
         <div className="space-y-6">
             <Link href="/crowdfunding" className="inline-flex items-center gap-2 text-dark-400 hover:text-white transition-colors">
                 <ArrowLeft className="w-4 h-4" /> Back to Projects
             </Link>
 
+            {/* Hero Image */}
+            <div className="relative h-64 md:h-80 rounded-2xl overflow-hidden">
+                <img
+                    src={imageUrl}
+                    alt={project.title}
+                    className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/50 to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6">
+                    <div className="flex items-center gap-3 mb-3">
+                        <span className="text-sm bg-dark-900/80 backdrop-blur-sm text-white px-3 py-1 rounded-full">{project.category}</span>
+                        {project.verified && (
+                            <span className="flex items-center gap-1 text-sm text-primary-400 bg-dark-900/80 backdrop-blur-sm px-3 py-1 rounded-full">
+                                <Award className="w-4 h-4" /> Shariah Verified
+                            </span>
+                        )}
+                    </div>
+                    <h1 className="text-3xl font-bold text-white">{project.title}</h1>
+                </div>
+            </div>
+
             <div className="grid grid-cols-3 gap-6">
                 <div className="col-span-2 space-y-6">
                     <div className="glass-card">
-                        <div className="flex items-start justify-between mb-4">
-                            <div>
-                                <h1 className="text-2xl font-bold text-white mb-2">{project.title}</h1>
-                                <span className="text-sm bg-dark-700 text-dark-300 px-3 py-1 rounded-full">{project.category}</span>
-                            </div>
-                            {project.verified && (
-                                <span className="flex items-center gap-1 text-sm text-primary-400 bg-primary-500/20 px-3 py-1.5 rounded-full">
-                                    <Award className="w-4 h-4" /> Shariah Verified
-                                </span>
-                            )}
-                        </div>
+                        <p className="text-dark-300 mb-6">{project.description}</p>
 
                         <div className="mb-4">
                             <div className="flex items-end justify-between mb-2">

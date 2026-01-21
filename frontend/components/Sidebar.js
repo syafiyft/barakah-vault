@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, TrendingUp, Calculator, Heart, LogOut, Sparkles } from 'lucide-react'
+import { LayoutDashboard, TrendingUp, Calculator, Heart, LogOut, Sparkles, Briefcase } from 'lucide-react'
 
 const navItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/invest', icon: TrendingUp, label: 'Invest' },
     { path: '/zakat', icon: Calculator, label: 'Zakat' },
     { path: '/crowdfunding', icon: Heart, label: 'Crowdfunding' },
+    { path: '/portfolio', icon: Briefcase, label: 'Portfolio' },
 ]
 
 import { signOut } from 'next-auth/react'
