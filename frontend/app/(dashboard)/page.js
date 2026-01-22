@@ -3,20 +3,16 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { TrendingUp, Calculator, Heart, Award, ArrowUpRight, Star, Briefcase, Loader2, Newspaper, Clock, ExternalLink, Quote, CalendarDays } from 'lucide-react'
+import { TrendingUp, DollarSign, Heart, Award, ArrowUpRight, Star, Briefcase, Loader2, Newspaper, Clock, ExternalLink, Quote, Bitcoin, Coins, Calculator } from 'lucide-react'
 import { getDailyQuote } from '@/components/DailyQuote'
 
-const topCompanies = [
-    { symbol: 'TSLA', name: 'Tesla, Inc.', score: 88, industry: 'Automotive', change: '+5.4%' },
-    { symbol: 'AAPL', name: 'Apple Inc.', score: 85, industry: 'Technology', change: '+2.3%' },
-    { symbol: 'MSFT', name: 'Microsoft Corp.', score: 82, industry: 'Technology', change: '+1.8%' },
-    { symbol: 'COST', name: 'Costco', score: 76, industry: 'Retail', change: '+0.5%' },
-    { symbol: 'GOOGL', name: 'Alphabet Inc.', score: 75, industry: 'Technology', change: '+1.2%' },
-    { symbol: 'NVDA', name: 'NVIDIA Corp.', score: 74, industry: 'Technology', change: '+3.1%' },
-    { symbol: 'AMZN', name: 'Amazon.com', score: 72, industry: 'Retail', change: '-0.4%' },
-    { symbol: 'ADBE', name: 'Adobe Inc.', score: 70, industry: 'Technology', change: '+0.8%' },
-    { symbol: 'INTC', name: 'Intel Corp.', score: 68, industry: 'Technology', change: '-1.5%' },
-    { symbol: 'META', name: 'Meta Platforms', score: 65, industry: 'Technology', change: '+2.1%' },
+// Fallback data if API fails
+const fallbackCompanies = [
+    { symbol: 'TSLA', name: 'Tesla, Inc.', score: 88, industry: 'Automotive' },
+    { symbol: 'AAPL', name: 'Apple Inc.', score: 85, industry: 'Technology' },
+    { symbol: 'MSFT', name: 'Microsoft Corp.', score: 82, industry: 'Technology' },
+    { symbol: 'COST', name: 'Costco', score: 76, industry: 'Retail' },
+    { symbol: 'GOOGL', name: 'Alphabet Inc.', score: 75, industry: 'Technology' },
 ]
 
 const featuredProjects = [
@@ -74,8 +70,13 @@ export default function Dashboard() {
     const [isLoading, setIsLoading] = useState(true)
     const [news, setNews] = useState([])
     const [isNewsLoading, setIsNewsLoading] = useState(true)
-    const [zakatData, setZakatData] = useState(null)
-    const [isZakatLoading, setIsZakatLoading] = useState(true)
+    const [cryptoPrices, setCryptoPrices] = useState({ btc: 0, eth: 0 })
+    const [isPricesLoading, setIsPricesLoading] = useState(true)
+    const [topMaqasidStocks, setTopMaqasidStocks] = useState(fallbackCompanies)
+    const [isTopStocksLoading, setIsTopStocksLoading] = useState(true)
+    const [avgMaqasidScore, setAvgMaqasidScore] = useState(0)
+    const [zakatPaid, setZakatPaid] = useState(0)
+    const [stockPrices, setStockPrices] = useState({})
 
     // Fetch news
     useEffect(() => {
@@ -94,22 +95,69 @@ export default function Dashboard() {
         fetchNews()
     }, [])
 
-    // Fetch Zakat data
+    // Fetch crypto prices
     useEffect(() => {
-        async function fetchZakatData() {
+        async function fetchPrices() {
             try {
-                const res = await fetch('/api/zakat')
+                const res = await fetch('/api/prices')
                 if (res.ok) {
                     const data = await res.json()
-                    setZakatData(data)
+                    setCryptoPrices({ btc: data.btc, eth: data.eth })
                 }
             } catch (error) {
-                console.error('Failed to fetch Zakat data:', error)
+                console.error('Failed to fetch prices:', error)
             }
-            setIsZakatLoading(false)
+            setIsPricesLoading(false)
         }
-        fetchZakatData()
+        fetchPrices()
     }, [])
+
+    // Fetch Top Maqasid Stocks from API
+    useEffect(() => {
+        async function fetchTopStocks() {
+            try {
+                const res = await fetch('/api/maqasid/top-stocks')
+                if (res.ok) {
+                    const data = await res.json()
+                    if (data.stocks?.length > 0) {
+                        setTopMaqasidStocks(data.stocks)
+                        // Calculate average score
+                        const avg = Math.round(data.stocks.reduce((sum, s) => sum + s.score, 0) / data.stocks.length)
+                        setAvgMaqasidScore(avg)
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch top stocks:', error)
+                // Use fallback average
+                const avg = Math.round(fallbackCompanies.reduce((sum, s) => sum + s.score, 0) / fallbackCompanies.length)
+                setAvgMaqasidScore(avg)
+            }
+            setIsTopStocksLoading(false)
+        }
+        fetchTopStocks()
+    }, [])
+
+    // Fetch stock prices when topMaqasidStocks changes
+    useEffect(() => {
+        async function fetchStockPrices() {
+            if (topMaqasidStocks.length === 0) return
+            try {
+                const symbols = topMaqasidStocks.slice(0, 3).map(s => s.symbol).join(',')
+                const res = await fetch(`/api/stocks?symbols=${symbols}`)
+                if (res.ok) {
+                    const data = await res.json()
+                    const pricesMap = {}
+                    data.stocks?.forEach(s => {
+                        if (!s.error) pricesMap[s.symbol] = s.price
+                    })
+                    setStockPrices(pricesMap)
+                }
+            } catch (error) {
+                console.error('Failed to fetch stock prices:', error)
+            }
+        }
+        fetchStockPrices()
+    }, [topMaqasidStocks])
 
     useEffect(() => {
         async function fetchPortfolioData() {
@@ -151,6 +199,17 @@ export default function Dashboard() {
 
                     // Calculate savings
                     const savingsValue = portfolio.savings?.reduce((sum, s) => sum + s.amount, 0) || 0
+
+                    // Fetch Zakat data from friend's implementation
+                    try {
+                        const zakatRes = await fetch('/api/zakat')
+                        if (zakatRes.ok) {
+                            const zakatData = await zakatRes.json()
+                            setZakatPaid(zakatData.summary?.totalPaidThisYear || 0)
+                        }
+                    } catch (error) {
+                        console.error('Failed to fetch zakat data:', error)
+                    }
 
                     setPortfolioValue(stocksValue + cryptoValue + savingsValue)
                 }
@@ -212,37 +271,21 @@ export default function Dashboard() {
                         )}
                     </div>
                 </Link>
-                <Link href="/invest" className="glass-card flex items-center gap-4 hover:border-primary-500/50 transition-colors">
-                    <div className="w-12 h-12 rounded-xl bg-gold-500/20 flex items-center justify-center">
-                        <Star className="w-6 h-6 text-gold-400" />
-                    </div>
-                    <div>
-                        <p className="text-sm text-dark-400">Avg Maqasid Score</p>
-                        <p className="text-xl font-bold text-white">78/100</p>
-                    </div>
-                </Link>
-                <Link href="/zakat" className="glass-card flex items-center gap-4 hover:border-primary-500/50 transition-colors">
-                    <div className="w-12 h-12 rounded-xl bg-primary-500/20 flex items-center justify-center">
-                        <Calculator className="w-6 h-6 text-primary-400" />
-                    </div>
-                    <div>
-                        <p className="text-sm text-dark-400">Zakat Paid ({new Date().getFullYear()})</p>
-                        {isZakatLoading ? (
-                            <Loader2 className="w-5 h-5 text-primary-400 animate-spin mt-1" />
-                        ) : (
-                            <p className="text-xl font-bold text-white">{formatCurrency(zakatData?.summary?.totalPaidThisYear || 0)}</p>
-                        )}
-                    </div>
-                </Link>
-                <Link href="/crowdfunding" className="glass-card flex items-center gap-4 hover:border-primary-500/50 transition-colors">
-                    <div className="w-12 h-12 rounded-xl bg-gold-500/20 flex items-center justify-center">
-                        <Heart className="w-6 h-6 text-gold-400" />
-                    </div>
-                    <div>
-                        <p className="text-sm text-dark-400">Projects Backed</p>
-                        <p className="text-xl font-bold text-white">4</p>
-                    </div>
-                </Link>
+                {[
+                    { icon: Star, label: 'Avg Maqasid Score', value: isTopStocksLoading ? '...' : `${avgMaqasidScore}/100`, color: 'gold', href: '/invest' },
+                    { icon: Calculator, label: `Zakat Paid (${new Date().getFullYear()})`, value: formatCurrency(zakatPaid), color: 'primary', href: '/zakat' },
+                    { icon: Heart, label: 'Projects Backed', value: '4', color: 'gold', href: '/crowdfunding' },
+                ].map((stat, i) => (
+                    <Link key={i} href={stat.href} className="glass-card flex items-center gap-4 hover:border-primary-500/50 transition-colors">
+                        <div className={`w-12 h-12 rounded-xl bg-${stat.color}-500/20 flex items-center justify-center`}>
+                            <stat.icon className={`w-6 h-6 text-${stat.color}-400`} />
+                        </div>
+                        <div>
+                            <p className="text-sm text-dark-400">{stat.label}</p>
+                            <p className="text-xl font-bold text-white">{stat.value}</p>
+                        </div>
+                    </Link>
+                ))}
             </div>
 
             {/* Main Grid */}
@@ -252,7 +295,7 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                             <TrendingUp className="w-5 h-5 text-primary-400" />
-                            Top Maqasid
+                            Top Maqasid Stocks
                         </h2>
                         <Link href="/invest" className="text-sm text-primary-400 hover:text-primary-300">
                             <ArrowUpRight className="w-4 h-4" />
@@ -260,16 +303,22 @@ export default function Dashboard() {
                     </div>
 
                     <div className="space-y-3">
-                        {topCompanies.slice(0, 5).map((company, i) => (
-                            <Link key={company.symbol} href="/invest" className="flex items-center gap-3 p-3 rounded-xl bg-dark-800/50 hover:bg-dark-800 transition-all">
-                                <span className={`text-sm font-bold ${i < 3 ? 'text-gold-400' : 'text-dark-500'}`}>{i + 1}</span>
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-medium text-white text-sm truncate">{company.symbol}</h3>
-                                    <p className="text-xs text-dark-400 truncate">{company.name}</p>
-                                </div>
-                                <span className="text-sm font-semibold text-primary-400">{company.score}</span>
-                            </Link>
-                        ))}
+                        {isTopStocksLoading ? (
+                            <div className="flex items-center justify-center py-8">
+                                <Loader2 className="w-6 h-6 text-primary-400 animate-spin" />
+                            </div>
+                        ) : (
+                            topMaqasidStocks.slice(0, 5).map((company, i) => (
+                                <Link key={company.symbol} href="/invest" className="flex items-center gap-3 p-3 rounded-xl bg-dark-800/50 hover:bg-dark-800 transition-all">
+                                    <span className={`text-sm font-bold ${i < 3 ? 'text-gold-400' : 'text-dark-500'}`}>{i + 1}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-medium text-white text-sm truncate">{company.symbol}</h3>
+                                        <p className="text-xs text-dark-400 truncate">{company.name}</p>
+                                    </div>
+                                    <span className="text-sm font-semibold text-primary-400">{company.score}</span>
+                                </Link>
+                            ))
+                        )}
                     </div>
                 </div>
 
@@ -313,62 +362,69 @@ export default function Dashboard() {
                     )}
                 </div>
 
-                {/* Zakat Widget */}
+                {/* Live Prices Widget */}
                 <div className="col-span-4 glass-card">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-                        <Calculator className="w-5 h-5 text-gold-400" />
-                        Zakat Tools
+                        <DollarSign className="w-5 h-5 text-primary-400" />
+                        Live Prices
                     </h2>
 
-                    <div className="space-y-3">
-                        <Link href="/zakat?type=traditional" className="block p-3 rounded-xl bg-dark-800/50 hover:bg-dark-800 transition-all group">
-                            <h3 className="font-medium text-white group-hover:text-primary-400">Traditional Calculator</h3>
-                            <p className="text-sm text-dark-400">Gold, savings, stocks</p>
-                        </Link>
-
-                        <Link href="/zakat?type=crypto" className="block p-3 rounded-xl bg-dark-800/50 hover:bg-dark-800 transition-all group">
-                            <h3 className="font-medium text-white group-hover:text-primary-400">Crypto Calculator</h3>
-                            <p className="text-sm text-dark-400">BTC, ETH, multi-method</p>
-                        </Link>
-
-                        <div className="pt-3 border-t border-dark-700">
-                            <p className="text-sm text-dark-400 mb-1">Your Zakat Summary</p>
-                            {isZakatLoading ? (
-                                <Loader2 className="w-5 h-5 text-gold-400 animate-spin mt-1" />
-                            ) : zakatData?.currentCalculation?.zakatDue ? (
-                                <>
-                                    <p className="text-2xl font-bold text-gold-400">
-                                        {formatCurrency(zakatData.currentCalculation.zakatDue)}
-                                    </p>
-                                    <div className="flex items-center gap-1 text-xs text-dark-400 mt-1">
-                                        <CalendarDays className="w-3 h-3" />
-                                        {zakatData.config?.daysUntilHaul > 0 ? (
-                                            <span>{zakatData.config.daysUntilHaul} days until Haul</span>
-                                        ) : (
-                                            <span>Haul completed - Calculate now</span>
-                                        )}
-                                    </div>
-                                    {zakatData.currentCalculation.status && (
-                                        <span className={`inline-block mt-2 px-2 py-0.5 text-xs rounded-full ${
-                                            zakatData.currentCalculation.status === 'paid'
-                                                ? 'bg-green-500/20 text-green-400'
-                                                : zakatData.currentCalculation.status === 'partial'
-                                                ? 'bg-yellow-500/20 text-yellow-400'
-                                                : 'bg-orange-500/20 text-orange-400'
-                                        }`}>
-                                            {zakatData.currentCalculation.status === 'paid' ? 'Paid' :
-                                             zakatData.currentCalculation.status === 'partial' ? 'Partially Paid' : 'Pending'}
-                                        </span>
-                                    )}
-                                </>
-                            ) : (
-                                <>
-                                    <p className="text-lg font-medium text-dark-300">Not calculated</p>
-                                    <p className="text-xs text-dark-400">Calculate your Zakat to see amount due</p>
-                                </>
-                            )}
+                    {isPricesLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                            <Loader2 className="w-6 h-6 text-primary-400 animate-spin" />
                         </div>
-                    </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {/* Crypto Prices */}
+                            <div>
+                                <h3 className="text-xs font-medium text-dark-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                    <Bitcoin className="w-3 h-3" /> Crypto
+                                </h3>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between p-3 rounded-xl bg-dark-800/50">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center">
+                                                <span className="text-orange-400 text-xs font-bold">₿</span>
+                                            </div>
+                                            <span className="font-medium text-white">Bitcoin</span>
+                                        </div>
+                                        <span className="text-white font-semibold">RM {cryptoPrices.btc?.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between p-3 rounded-xl bg-dark-800/50">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                                <span className="text-blue-400 text-xs font-bold">Ξ</span>
+                                            </div>
+                                            <span className="font-medium text-white">Ethereum</span>
+                                        </div>
+                                        <span className="text-white font-semibold">RM {cryptoPrices.eth?.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Stock Prices */}
+                            <div>
+                                <h3 className="text-xs font-medium text-dark-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                    <Coins className="w-3 h-3" /> Popular Stocks
+                                </h3>
+                                <div className="space-y-2">
+                                    {topMaqasidStocks.slice(0, 3).map((stock) => (
+                                        <Link key={stock.symbol} href="/invest" className="flex items-center justify-between p-3 rounded-xl bg-dark-800/50 hover:bg-dark-800 transition-all">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 rounded-full bg-primary-500/20 flex items-center justify-center">
+                                                    <span className="text-primary-400 text-xs font-bold">{stock.symbol.slice(0, 2)}</span>
+                                                </div>
+                                                <span className="font-medium text-white">{stock.symbol}</span>
+                                            </div>
+                                            <span className="text-white font-semibold">
+                                                {stockPrices[stock.symbol] ? `RM ${stockPrices[stock.symbol].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '...'}
+                                            </span>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
