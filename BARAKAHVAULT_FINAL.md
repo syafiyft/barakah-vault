@@ -163,11 +163,17 @@ Additional:
 └─ Governance: 85/100
 
 Investment Recommendation: HIGHLY RECOMMENDED
-Reasoning: Apple not only avoids haram but actively 
-promotes Islamic values through innovation, fair labor, 
+Reasoning: Apple not only avoids haram but actively
+promotes Islamic values through innovation, fair labor,
 privacy protection, and community investment.
 
 Compared to Industry: +23 points above average
+
+Sources & References:
+├─ Apple Environmental Progress Report 2024 (Apple Inc.)
+├─ Apple Supplier Responsibility Report 2024 (Apple Inc.)
+└─ Big Tech Privacy Rankings 2024 (Electronic Frontier Foundation)
+   [Click to search and verify]
 ```
 
 **Why It's Revolutionary:**
@@ -176,6 +182,8 @@ Compared to Industry: +23 points above average
 - ✅ Based on core Islamic principles (Maqasid)
 - ✅ AI-powered analysis of company practices
 - ✅ Helps Muslims make values-aligned investments
+- ✅ **Halal Alternatives:** Suggests better-scoring companies in the same sector
+- ✅ **Source Citations:** Provides searchable references (ESG reports, news articles) so users can verify claims independently
 
 ---
 
@@ -601,6 +609,9 @@ RESULT:
 
 ## 🏗️ Technical Architecture
 
+> **[View Detailed Architecture Diagrams & Flowcharts](./ARCHITECTURE.md)** 📊
+
+
 ### **Tech Stack:**
 
 **Frontend:**
@@ -638,9 +649,16 @@ POST   /api/auth/login
 GET    /api/auth/me
 
 Maqasid Scorer:
+POST   /api/maqasid/analyze          (AI-powered company analysis)
 GET    /api/maqasid/:symbol
 GET    /api/maqasid/compare?symbols=AAPL,MSFT
 GET    /api/maqasid/top-rated
+
+Response includes:
+- totalScore (0-100)
+- breakdown (5 dimensions with scores & reasoning)
+- alternatives (better-rated peers in same sector)
+- sources (searchable references: reports, news, official docs)
 
 Zakat:
 POST   /api/zakat/traditional/calculate

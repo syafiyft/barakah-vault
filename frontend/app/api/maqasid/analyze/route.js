@@ -1,80 +1,88 @@
 import { NextResponse } from 'next/server';
+import OpenAI from 'openai';
 
-// Mock database of scores
-const MOCK_SCORES = {
-    'apple': {
-        company: 'Apple Inc.',
-        ticker: 'AAPL',
-        totalScore: 85,
-        breakdown: {
-            faith: { score: 90, reasoning: "High compliance with ethical financing; low interest-bearing debt." },
-            life: { score: 85, reasoning: "Strong labor standards and supplier responsibility programs." },
-            intellect: { score: 95, reasoning: "Global leader in innovation and knowledge tools." },
-            lineage: { score: 75, reasoning: "Generally positive family impact, though screen time concerns exist." },
-            wealth: { score: 80, reasoning: "Massive wealth creation but criticism on aggressive tax planning." }
-        }
-    },
-    'tesla': {
-        company: 'Tesla, Inc.',
-        ticker: 'TSLA',
-        totalScore: 88,
-        breakdown: {
-            faith: { score: 85, reasoning: "Moderate leverage; generally permissible business model." },
-            life: { score: 98, reasoning: "Critical contribution to climate preservation (Hifz al-Nafs)." },
-            intellect: { score: 95, reasoning: "Pioneering autonomous tech and renewable energy storage." },
-            lineage: { score: 80, reasoning: "Safety record is improving; generally neutral impact." },
-            wealth: { score: 80, reasoning: "High growth potential for investors, though volatile." }
-        }
-    },
-    'microsoft': {
-        company: 'Microsoft Corp.',
-        ticker: 'MSFT',
-        totalScore: 82,
-        breakdown: {
-            faith: { score: 88, reasoning: "Low debt levels and permissible income sources." },
-            life: { score: 80, reasoning: "Carbon negative initiatives are exemplary for Hifz al-Nafs." },
-            intellect: { score: 92, reasoning: "Empowering global productivity via software and AI." },
-            lineage: { score: 75, reasoning: "Gaming division (Xbox) has mixed reviews on youth impact." },
-            wealth: { score: 75, reasoning: "Solid dividend payer and wealth preservation." }
-        }
-    }
-};
-
-// Default score for unknown companies
-const DEFAULT_SCORE = (name) => ({
-    company: name,
-    ticker: 'UNKNOWN',
-    totalScore: 70, // Average safe score
-    breakdown: {
-        faith: { score: 70, reasoning: "Insufficient data to verify full Shariah compliance." },
-        life: { score: 75, reasoning: "No major labor or environmental violations reported." },
-        intellect: { score: 70, reasoning: "Standard industry innovation output." },
-        lineage: { score: 65, reasoning: "Neutral impact on family and future generations." },
-        wealth: { score: 70, reasoning: "Stable financial outlook assumed." }
-    }
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
 });
+
+const SYSTEM_PROMPT = `
+You are an expert Islamic Finance Analyst specializing in Maqasid al-Shariah (Objectives of Islamic Law). 
+Your task is to evaluate publicly traded companies based on how well they fulfill the 5 Essentials of Maqasid al-Shariah.
+
+The 5 Dimensions are:
+1. Faith (Deen): Religious freedom, ethical marketing, privacy protection (Hifz al-Asrar), avoidance of anti-religious stances.
+2. Life (Nafs): Worker safety, environmental protection, product safety, healthcare benefits.
+3. Intellect (Aql): Innovation (R&D), truthfulness in reporting, education support, avoidance of harmful addiction/distraction.
+4. Lineage (Nasl): Family-friendly policies (parental leave), prevention of sexual exploitation, sustainability for future generations.
+5. Wealth (Mal): Fair wages, ethical distribution, job creation, financial stability, avoidance of corruption/bribery.
+
+Instructions:
+1.  Receive the company name.
+2.  Use your internal knowledge to assess the company's recent public performance, policies, and controversies.
+3.  Assign a score (0-100) for each dimension. Be critical but fair.
+    - 90-100: Exemplary/Leader
+    - 80-89: Strong/Good
+    - 70-79: Average/Compliance
+    - <70: Concerns/Violations
+4.  Provide a specific "reasoning" for each score, citing known facts or general reputation.
+5.  Calculated a weighted average "totalScore".
+
+Output strictly in this JSON format:
+{
+    "company": "Company Name",
+    "ticker": "TICKER",
+    "totalScore": 85,
+    "breakdown": {
+        "faith": { "score": 90, "reasoning": "..." },
+        "life": { "score": 85, "reasoning": "..." },
+        "intellect": { "score": 95, "reasoning": "..." },
+        "lineage": { "score": 75, "reasoning": "..." },
+        "wealth": { "score": 80, "reasoning": "..." }
+    },
+    "alternatives": [
+        { "company": "Better Co.", "ticker": "TKR", "score": 95, "reason": "Better labor practices." }
+    ],
+    "sources": [
+        { "name": "Apple Sustainability Report 2024", "publisher": "Apple Inc.", "type": "Report" },
+        { "name": "Tech Giants Face Labor Scrutiny", "publisher": "Reuters", "type": "News" }
+    ]
+}
+
+For the "sources" field:
+- Provide 2-4 real, searchable references that support your analysis.
+- Each source must have: "name" (specific document/article title), "publisher" (organization that published it), and "type" ("Report", "News", or "Official").
+- Use REAL documents you know exist: annual reports, sustainability reports, well-known news coverage, SEC filings.
+- Format names so users can easily find them via Google search (e.g., "Tesla Impact Report 2023", "MSCI ESG Rating - Microsoft").
+
+If the company's totalScore is < 75, provide 2-3 "Hallal Alternatives" in the same sector with higher scores.
+If the company is already high scoring (>75), provide "Top Peers" in the same sector.
+`;
 
 export async function POST(req) {
     try {
         const { query } = await req.json();
-        const normalizedQuery = query.toLowerCase().trim();
 
-        // specific hits
-        if (normalizedQuery.includes('apple') || normalizedQuery.includes('aapl')) {
-            return NextResponse.json(MOCK_SCORES['apple']);
-        }
-        if (normalizedQuery.includes('tesla') || normalizedQuery.includes('tsla')) {
-            return NextResponse.json(MOCK_SCORES['tesla']);
-        }
-        if (normalizedQuery.includes('microsoft') || normalizedQuery.includes('msft')) {
-            return NextResponse.json(MOCK_SCORES['microsoft']);
+        if (!query) {
+            return NextResponse.json({ error: 'Company name is required' }, { status: 400 });
         }
 
-        // Return generic/randomized score for others to keep the "magic" alive
-        return NextResponse.json(DEFAULT_SCORE(query));
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+                { role: "system", content: SYSTEM_PROMPT },
+                { role: "user", content: `Analyze this company: ${query}` }
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0.7,
+        });
+
+        const resultRaw = completion.choices[0].message.content;
+        const resultJson = JSON.parse(resultRaw);
+
+        return NextResponse.json(resultJson);
 
     } catch (error) {
         console.error('Maqasid analysis error:', error);
-        return NextResponse.json({ error: 'Analysis failed' }, { status: 500 });
+        return NextResponse.json({ error: 'Analysis failed', details: error.message }, { status: 500 });
     }
 }

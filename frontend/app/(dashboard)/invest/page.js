@@ -1,13 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Loader2 } from 'lucide-react'
+import { Search, Loader2, Info } from 'lucide-react'
 import ScoreCard from '@/components/ScoreCard'
+import MaqasidInfoModal from '@/components/MaqasidInfoModal'
 
 export default function Invest() {
     const [query, setQuery] = useState('')
     const [loading, setLoading] = useState(false)
     const [result, setResult] = useState(null)
+    const [showInfo, setShowInfo] = useState(false)
 
     const handleSearch = async (e) => {
         e.preventDefault()
@@ -45,7 +47,16 @@ export default function Invest() {
                 <p className="text-lg text-dark-300 max-w-2xl mx-auto">
                     Analyze any company's alignment with the 5 Objectives of Shariah: Faith, Life, Intellect, Lineage, and Wealth.
                 </p>
+                <button
+                    onClick={() => setShowInfo(true)}
+                    className="inline-flex items-center gap-2 text-primary-400 hover:text-primary-300 transition-colors text-sm font-medium"
+                >
+                    <Info className="w-4 h-4" />
+                    How does the screening work?
+                </button>
             </div>
+
+            <MaqasidInfoModal isOpen={showInfo} onClose={() => setShowInfo(false)} />
 
             {/* Search Bar */}
             <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto">

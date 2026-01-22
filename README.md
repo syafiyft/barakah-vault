@@ -39,6 +39,8 @@ Scores companies on how well they promote the 5 objectives of Islamic law (Maqas
 - **Intellect (Aql):** Innovation, R&D, education.
 - **Lineage (Nasl):** Family policies, work-life balance.
 - **Wealth (Mal):** Fair wages, economic stability.
+- **Halal Alternatives:** Suggests better-rated companies in the same sector.
+- **Source Citations:** Provides searchable references (reports, news articles) to verify claims.
 
 ### **2. Dual Zakat Calculator System** 💰
 
