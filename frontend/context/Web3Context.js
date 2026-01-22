@@ -14,6 +14,7 @@ const Web3Context = createContext({
         crowdfunding: null
     },
     isConnected: false,
+    chainId: null,
     error: null
 });
 
@@ -22,6 +23,7 @@ export function Web3Provider({ children }) {
     const [provider, setProvider] = useState(null);
     const [signer, setSigner] = useState(null);
     const [contracts, setContracts] = useState({ receipt: null, crowdfunding: null });
+    const [chainId, setChainId] = useState(null);
     const [error, setError] = useState(null);
     const [isConnected, setIsConnected] = useState(false);
 
@@ -58,10 +60,12 @@ export function Web3Provider({ children }) {
                 const browserProvider = new ethers.BrowserProvider(window.ethereum);
                 const accounts = await browserProvider.send("eth_requestAccounts", []);
                 const currentSigner = await browserProvider.getSigner();
+                const network = await browserProvider.getNetwork();
 
                 setProvider(browserProvider);
                 setSigner(currentSigner);
                 setAccount(accounts[0]);
+                setChainId(Number(network.chainId));
                 setIsConnected(true);
 
                 await initContracts(currentSigner);
@@ -84,9 +88,11 @@ export function Web3Provider({ children }) {
                 const accounts = await browserProvider.listAccounts();
                 if (accounts.length > 0) {
                     const currentSigner = await browserProvider.getSigner();
+                    const network = await browserProvider.getNetwork();
                     setProvider(browserProvider);
                     setSigner(currentSigner);
                     setAccount(accounts[0].address);
+                    setChainId(Number(network.chainId));
                     setIsConnected(true);
                     await initContracts(currentSigner);
                 }
@@ -120,7 +126,7 @@ export function Web3Provider({ children }) {
     };
 
     return (
-        <Web3Context.Provider value={{ account, connectWallet, disconnectWallet, provider, signer, contracts, isConnected, error }}>
+        <Web3Context.Provider value={{ account, connectWallet, disconnectWallet, provider, signer, contracts, isConnected, chainId, error }}>
             {children}
         </Web3Context.Provider>
     );
