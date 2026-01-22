@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { TrendingUp, Calculator, Heart, Award, ArrowUpRight, Star, Briefcase, Loader2, Newspaper, Clock, ExternalLink, Quote } from 'lucide-react'
+import { TrendingUp, Calculator, Heart, Award, ArrowUpRight, Star, Briefcase, Loader2, Newspaper, Clock, ExternalLink, Quote, CalendarDays } from 'lucide-react'
 import { getDailyQuote } from '@/components/DailyQuote'
 
 const topCompanies = [
@@ -74,6 +74,8 @@ export default function Dashboard() {
     const [isLoading, setIsLoading] = useState(true)
     const [news, setNews] = useState([])
     const [isNewsLoading, setIsNewsLoading] = useState(true)
+    const [zakatData, setZakatData] = useState(null)
+    const [isZakatLoading, setIsZakatLoading] = useState(true)
 
     // Fetch news
     useEffect(() => {
@@ -90,6 +92,23 @@ export default function Dashboard() {
             setIsNewsLoading(false)
         }
         fetchNews()
+    }, [])
+
+    // Fetch Zakat data
+    useEffect(() => {
+        async function fetchZakatData() {
+            try {
+                const res = await fetch('/api/zakat')
+                if (res.ok) {
+                    const data = await res.json()
+                    setZakatData(data)
+                }
+            } catch (error) {
+                console.error('Failed to fetch Zakat data:', error)
+            }
+            setIsZakatLoading(false)
+        }
+        fetchZakatData()
     }, [])
 
     useEffect(() => {
@@ -193,21 +212,37 @@ export default function Dashboard() {
                         )}
                     </div>
                 </Link>
-                {[
-                    { icon: Star, label: 'Avg Maqasid Score', value: '78/100', color: 'gold', href: '/invest' },
-                    { icon: Calculator, label: 'Zakat Paid (2025)', value: 'RM 4,500', color: 'primary', href: '/zakat' },
-                    { icon: Heart, label: 'Projects Backed', value: '4', color: 'gold', href: '/crowdfunding' },
-                ].map((stat, i) => (
-                    <Link key={i} href={stat.href} className="glass-card flex items-center gap-4 hover:border-primary-500/50 transition-colors">
-                        <div className={`w-12 h-12 rounded-xl bg-${stat.color}-500/20 flex items-center justify-center`}>
-                            <stat.icon className={`w-6 h-6 text-${stat.color}-400`} />
-                        </div>
-                        <div>
-                            <p className="text-sm text-dark-400">{stat.label}</p>
-                            <p className="text-xl font-bold text-white">{stat.value}</p>
-                        </div>
-                    </Link>
-                ))}
+                <Link href="/invest" className="glass-card flex items-center gap-4 hover:border-primary-500/50 transition-colors">
+                    <div className="w-12 h-12 rounded-xl bg-gold-500/20 flex items-center justify-center">
+                        <Star className="w-6 h-6 text-gold-400" />
+                    </div>
+                    <div>
+                        <p className="text-sm text-dark-400">Avg Maqasid Score</p>
+                        <p className="text-xl font-bold text-white">78/100</p>
+                    </div>
+                </Link>
+                <Link href="/zakat" className="glass-card flex items-center gap-4 hover:border-primary-500/50 transition-colors">
+                    <div className="w-12 h-12 rounded-xl bg-primary-500/20 flex items-center justify-center">
+                        <Calculator className="w-6 h-6 text-primary-400" />
+                    </div>
+                    <div>
+                        <p className="text-sm text-dark-400">Zakat Paid ({new Date().getFullYear()})</p>
+                        {isZakatLoading ? (
+                            <Loader2 className="w-5 h-5 text-primary-400 animate-spin mt-1" />
+                        ) : (
+                            <p className="text-xl font-bold text-white">{formatCurrency(zakatData?.summary?.totalPaidThisYear || 0)}</p>
+                        )}
+                    </div>
+                </Link>
+                <Link href="/crowdfunding" className="glass-card flex items-center gap-4 hover:border-primary-500/50 transition-colors">
+                    <div className="w-12 h-12 rounded-xl bg-gold-500/20 flex items-center justify-center">
+                        <Heart className="w-6 h-6 text-gold-400" />
+                    </div>
+                    <div>
+                        <p className="text-sm text-dark-400">Projects Backed</p>
+                        <p className="text-xl font-bold text-white">4</p>
+                    </div>
+                </Link>
             </div>
 
             {/* Main Grid */}
@@ -298,8 +333,40 @@ export default function Dashboard() {
 
                         <div className="pt-3 border-t border-dark-700">
                             <p className="text-sm text-dark-400 mb-1">Your Zakat Summary</p>
-                            <p className="text-2xl font-bold text-gold-400">RM 2,500</p>
-                            <p className="text-xs text-dark-400">Due: March 15, 2026</p>
+                            {isZakatLoading ? (
+                                <Loader2 className="w-5 h-5 text-gold-400 animate-spin mt-1" />
+                            ) : zakatData?.currentCalculation?.zakatDue ? (
+                                <>
+                                    <p className="text-2xl font-bold text-gold-400">
+                                        {formatCurrency(zakatData.currentCalculation.zakatDue)}
+                                    </p>
+                                    <div className="flex items-center gap-1 text-xs text-dark-400 mt-1">
+                                        <CalendarDays className="w-3 h-3" />
+                                        {zakatData.config?.daysUntilHaul > 0 ? (
+                                            <span>{zakatData.config.daysUntilHaul} days until Haul</span>
+                                        ) : (
+                                            <span>Haul completed - Calculate now</span>
+                                        )}
+                                    </div>
+                                    {zakatData.currentCalculation.status && (
+                                        <span className={`inline-block mt-2 px-2 py-0.5 text-xs rounded-full ${
+                                            zakatData.currentCalculation.status === 'paid'
+                                                ? 'bg-green-500/20 text-green-400'
+                                                : zakatData.currentCalculation.status === 'partial'
+                                                ? 'bg-yellow-500/20 text-yellow-400'
+                                                : 'bg-orange-500/20 text-orange-400'
+                                        }`}>
+                                            {zakatData.currentCalculation.status === 'paid' ? 'Paid' :
+                                             zakatData.currentCalculation.status === 'partial' ? 'Partially Paid' : 'Pending'}
+                                        </span>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    <p className="text-lg font-medium text-dark-300">Not calculated</p>
+                                    <p className="text-xs text-dark-400">Calculate your Zakat to see amount due</p>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
