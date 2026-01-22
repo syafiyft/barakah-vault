@@ -42,49 +42,77 @@ const project = {
 
 export default function ProjectDetail({ params }) {
     // In a real app, use params.id to fetch data
-    const progress = (project.raised / project.goal) * 100
-
     const { isConnected, connectWallet, contracts, account } = useWeb3()
     const [amount, setAmount] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [txHash, setTxHash] = useState(null)
     const [tokenId, setTokenId] = useState(null)
+    const [projectStats, setProjectStats] = useState({
+        raised: project.raised,
+        backers: project.backers
+    })
+    const [paymentMethod, setPaymentMethod] = useState('crypto') // 'crypto' or 'bank'
+
+    const progress = (projectStats.raised / project.goal) * 100
 
     const handleContribute = async () => {
         if (!amount || isNaN(amount) || parseFloat(amount) <= 0) return
 
-        try {
-            setIsLoading(true)
-            setTxHash(null)
-            setTokenId(null)
-            // Hardcoded project ID 1 and metadata URI for demo
-            const tx = await contracts.crowdfunding.contribute(1, "ipfs://Qmd7...", {
-                value: ethers.parseEther(amount.toString())
-            })
-            const receipt = await tx.wait()
-            setTxHash(tx.hash)
+        setIsLoading(true)
+        setTxHash(null)
+        setTokenId(null)
 
-            // Find NFT Token ID from logs
-            // DonationReceipt emits Transfer(from, to, tokenId)
-            if (contracts.receipt) {
-                for (const log of receipt.logs) {
-                    try {
-                        // Check if log belongs to Receipt contract
-                        if (log.address.toLowerCase() === contracts.receipt.target.toLowerCase()) {
-                            const parsedLog = contracts.receipt.interface.parseLog(log);
-                            if (parsedLog && parsedLog.name === 'Transfer') {
-                                setTokenId(parsedLog.args[2].toString());
-                                break;
+        try {
+            if (paymentMethod === 'bank') {
+                // Mock Bank Transfer
+                await new Promise(resolve => setTimeout(resolve, 1500)) // Simulate API call
+
+                const contributionAmount = parseFloat(amount)
+                setProjectStats(prev => ({
+                    raised: prev.raised + contributionAmount,
+                    backers: prev.backers + 1
+                }))
+
+                alert(`Bank Transfer Successful! RM ${contributionAmount.toLocaleString()} added to campaign.`)
+                setAmount('')
+            } else {
+                // Crypto Contribution
+                // Hardcoded project ID 1 and metadata URI for demo
+                const tx = await contracts.crowdfunding.contribute(1, "ipfs://Qmd7...", {
+                    value: ethers.parseEther(amount.toString())
+                })
+                const receipt = await tx.wait()
+                setTxHash(tx.hash)
+
+                // Find NFT Token ID from logs
+                if (contracts.receipt) {
+                    for (const log of receipt.logs) {
+                        try {
+                            if (log.address.toLowerCase() === contracts.receipt.target.toLowerCase()) {
+                                const parsedLog = contracts.receipt.interface.parseLog(log);
+                                if (parsedLog && parsedLog.name === 'Transfer') {
+                                    setTokenId(parsedLog.args[2].toString());
+                                    break;
+                                }
                             }
+                        } catch (e) {
+                            console.log("Log parse error:", e);
                         }
-                    } catch (e) {
-                        console.log("Log parse error:", e);
                     }
                 }
-            }
 
-            alert("Contribution successful! NFT Receipt minted.")
-            setAmount('')
+                // Update stats (convert ETH to RM for demo, 1 ETH = ~12,000 RM)
+                const ethAmount = parseFloat(amount)
+                const rmValue = ethAmount * 12000
+
+                setProjectStats(prev => ({
+                    raised: prev.raised + rmValue,
+                    backers: prev.backers + 1
+                }))
+
+                alert("Contribution successful! NFT Receipt minted.")
+                setAmount('')
+            }
         } catch (err) {
             console.error(err)
             alert("Transaction failed: " + (err.reason || err.message))
@@ -137,7 +165,7 @@ export default function ProjectDetail({ params }) {
                         <div className="mb-4">
                             <div className="flex items-end justify-between mb-2">
                                 <div>
-                                    <p className="text-3xl font-bold text-white">RM {project.raised.toLocaleString()}</p>
+                                    <p className="text-3xl font-bold text-white">RM {projectStats.raised.toLocaleString()}</p>
                                     <p className="text-sm text-dark-400">raised of RM {project.goal.toLocaleString()} goal</p>
                                 </div>
                                 <p className="text-lg font-semibold text-primary-400">{progress.toFixed(0)}%</p>
@@ -148,7 +176,7 @@ export default function ProjectDetail({ params }) {
                         </div>
 
                         <div className="flex items-center gap-6 text-sm">
-                            <span className="flex items-center gap-2 text-dark-300"><Users className="w-4 h-4" /> {project.backers} backers</span>
+                            <span className="flex items-center gap-2 text-dark-300"><Users className="w-4 h-4" /> {projectStats.backers} backers</span>
                             <span className="flex items-center gap-2 text-dark-300"><Clock className="w-4 h-4" /> {project.daysLeft} days left</span>
                         </div>
                     </div>
@@ -205,7 +233,31 @@ export default function ProjectDetail({ params }) {
                 <div className="glass-card sticky top-24 h-fit">
                     <h2 className="text-lg font-semibold text-white mb-4">Contribute</h2>
                     <div className="mb-4">
-                        <label className="block text-sm text-dark-400 mb-2">Amount (RM / ETH)</label>
+                        <label className="block text-sm text-dark-400 mb-2">Payment Method</label>
+                        <div className="flex p-1 bg-dark-800 rounded-lg mb-4">
+                            <button
+                                onClick={() => {
+                                    setPaymentMethod('crypto')
+                                    setAmount('')
+                                }}
+                                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${paymentMethod === 'crypto' ? 'bg-primary-500 text-white shadow-lg' : 'text-dark-400 hover:text-white'}`}
+                            >
+                                Crypto (ETH)
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setPaymentMethod('bank')
+                                    setAmount('')
+                                }}
+                                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${paymentMethod === 'bank' ? 'bg-primary-500 text-white shadow-lg' : 'text-dark-400 hover:text-white'}`}
+                            >
+                                Bank Transfer
+                            </button>
+                        </div>
+
+                        <label className="block text-sm text-dark-400 mb-2">
+                            Amount ({paymentMethod === 'crypto' ? 'ETH' : 'RM'})
+                        </label>
                         <input
                             type="number"
                             placeholder="Enter amount"
@@ -214,19 +266,31 @@ export default function ProjectDetail({ params }) {
                             onChange={(e) => setAmount(e.target.value)}
                         />
                         <div className="flex gap-2 mt-2">
-                            {[0.01, 0.05, 0.1, 0.5].map((amt) => (
-                                <button
-                                    key={amt}
-                                    onClick={() => setAmount(amt.toString())}
-                                    className="flex-1 py-2 rounded-lg bg-dark-800 text-dark-300 text-sm hover:bg-dark-700 transition-colors"
-                                >
-                                    {amt} ETH
-                                </button>
-                            ))}
+                            {paymentMethod === 'crypto' ? (
+                                [0.01, 0.05, 0.1, 0.5].map((amt) => (
+                                    <button
+                                        key={amt}
+                                        onClick={() => setAmount(amt.toString())}
+                                        className="flex-1 py-2 rounded-lg bg-dark-800 text-dark-300 text-sm hover:bg-dark-700 transition-colors"
+                                    >
+                                        {amt} ETH
+                                    </button>
+                                ))
+                            ) : (
+                                [10, 50, 100, 500].map((amt) => (
+                                    <button
+                                        key={amt}
+                                        onClick={() => setAmount(amt.toString())}
+                                        className="flex-1 py-2 rounded-lg bg-dark-800 text-dark-300 text-sm hover:bg-dark-700 transition-colors"
+                                    >
+                                        RM {amt}
+                                    </button>
+                                ))
+                            )}
                         </div>
                     </div>
 
-                    {!isConnected ? (
+                    {paymentMethod === 'crypto' && !isConnected ? (
                         <button
                             onClick={connectWallet}
                             className="btn-primary w-full flex items-center justify-center gap-2"
@@ -240,7 +304,7 @@ export default function ProjectDetail({ params }) {
                             className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wallet className="w-5 h-5" />}
-                            {isLoading ? "Processing..." : "Contribute Now"}
+                            {isLoading ? "Processing..." : paymentMethod === 'bank' ? "Proceed with Bank Transfer" : "Contribute Now"}
                         </button>
                     )}
                     {isConnected && <p className="text-xs text-dark-400 mt-2 text-center">Connected: {account.slice(0, 6)}...{account.slice(-4)}</p>}
