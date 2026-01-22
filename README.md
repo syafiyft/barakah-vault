@@ -173,6 +173,17 @@ Stay informed with integrated market data.
 - **News API:** Islamic finance news and market updates
 - **Search:** Find stocks by symbol or company name
 
+### **6. Enhanced Crowdfunding & Charity** 🤝
+
+- **Dual Payment Modes:** Contribute via **Crypto (ETH)** for transparency or **Bank Transfer** (Mock) for ease.
+- **Dynamic Real-Time Updates:** Project stats update instantly and persist across sessions.
+- **Local Block Explorer:** Built-in explorer to visualize transactions on the local blockchain (Chain ID 31337).
+
+### **7. Zakat & Impact Tracking** 🌱
+
+- **Instant Calculation:** Automatic Zakat calculation based on gold/silver Nisab.
+- **Impact Verification:** Blockchain-backed receipts for every crypto donation.
+
 ---
 
 ## 📅 Development Progress
