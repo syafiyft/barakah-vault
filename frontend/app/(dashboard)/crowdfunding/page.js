@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Search, Award, Users, Clock, Landmark, GraduationCap, Home, HeartHandshake } from 'lucide-react'
@@ -72,7 +72,19 @@ const projects = [
 const categories = ['All', 'Masjid', 'Education', 'Welfare', 'Healthcare']
 
 function ProjectCard({ project }) {
-    const progress = (project.raised / project.goal) * 100
+    const [stats, setStats] = useState({
+        raised: project.raised,
+        backers: project.backers
+    })
+
+    useEffect(() => {
+        const savedStats = localStorage.getItem(`project_${project.id}_stats`)
+        if (savedStats) {
+            setStats(JSON.parse(savedStats))
+        }
+    }, [project.id])
+
+    const progress = (stats.raised / project.goal) * 100
     const Icon = project.icon
     const imageUrl = project.image || categoryImages[project.category] || categoryImages.default
 
@@ -114,7 +126,7 @@ function ProjectCard({ project }) {
                 <div className="mb-4">
                     <div className="flex items-center justify-between text-sm mb-2">
                         <span className="text-dark-400">{progress.toFixed(0)}% funded</span>
-                        <span className="text-white font-semibold">RM {project.raised.toLocaleString()}</span>
+                        <span className="text-white font-semibold">RM {stats.raised.toLocaleString()}</span>
                     </div>
                     <div className="h-2 bg-dark-700 rounded-full overflow-hidden">
                         <div className="h-full bg-gradient-to-r from-primary-500 to-primary-400 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
@@ -123,7 +135,7 @@ function ProjectCard({ project }) {
                 </div>
 
                 <div className="flex items-center justify-between text-sm text-dark-400">
-                    <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {project.backers} backers</span>
+                    <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {stats.backers} backers</span>
                     <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {project.daysLeft} days left</span>
                 </div>
             </div>

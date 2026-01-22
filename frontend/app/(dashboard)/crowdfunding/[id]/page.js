@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Award, Users, Clock, CheckCircle, Circle, Play, Wallet, Loader2, ArrowUpRight } from 'lucide-react'
 import { useWeb3 } from '@/context/Web3Context'
@@ -52,6 +52,23 @@ export default function ProjectDetail({ params }) {
         backers: project.backers
     })
     const [paymentMethod, setPaymentMethod] = useState('crypto') // 'crypto' or 'bank'
+    const [hasLoaded, setHasLoaded] = useState(false)
+
+    // Load stats from local storage on mount
+    useEffect(() => {
+        const savedStats = localStorage.getItem(`project_${project.id}_stats`)
+        if (savedStats) {
+            setProjectStats(JSON.parse(savedStats))
+        }
+        setHasLoaded(true)
+    }, [])
+
+    // Save stats to local storage whenever they change
+    useEffect(() => {
+        if (hasLoaded) {
+            localStorage.setItem(`project_${project.id}_stats`, JSON.stringify(projectStats))
+        }
+    }, [projectStats, hasLoaded])
 
     const progress = (projectStats.raised / project.goal) * 100
 
