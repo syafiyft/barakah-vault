@@ -42,7 +42,7 @@ const project = {
 
 export default function ProjectDetail({ params }) {
     // In a real app, use params.id to fetch data
-    const { isConnected, connectWallet, contracts, account } = useWeb3()
+    const { isConnected, connectWallet, contracts, account, chainId } = useWeb3()
     const [amount, setAmount] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [txHash, setTxHash] = useState(null)
@@ -139,10 +139,14 @@ export default function ProjectDetail({ params }) {
     }
 
     const getExplorerLink = (hash) => {
-        // Simple logic: if hash starts with 0x, assume it's valid.
-        // For Localhost, we can't link effectively.
-        // For Sepolia: https://sepolia.etherscan.io/tx/${hash}
-        return `https://sepolia.etherscan.io/tx/${hash}` // Default to Sepolia/Mainnet structure
+        // If connecting to Localhost Hardhat (31337) or Ganache (1337)
+        // OR if we are running the frontend on localhost (fallback)
+        const isLocalHost = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+        if (chainId === 31337 || chainId === 1337 || (isLocalHost && !chainId)) {
+            return `/explorer/tx/${hash}`
+        }
+        // Fallback to Sepolia for testnet
+        return `https://sepolia.etherscan.io/tx/${hash}`
     }
 
     const imageUrl = project.image || categoryImages[project.category] || categoryImages.default
