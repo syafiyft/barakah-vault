@@ -122,7 +122,12 @@ _This will also automatically export the contract addresses to `frontend/utils/c
 cd frontend
 
 # Install dependencies (if first time)
+# Install dependencies (if first time)
 npm install
+
+# Configure Environment Variables
+cp .env.example .env.local
+# Open .env.local and fill in your MONGODB_URI and other keys
 
 # Start the dev server
 npm run dev
