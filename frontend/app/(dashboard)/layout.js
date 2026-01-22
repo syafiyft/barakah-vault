@@ -1,16 +1,16 @@
 import Sidebar from '@/components/Sidebar'
-import Navbar from '@/components/Navbar'
+import DashboardContent from '@/components/DashboardContent'
+import { SidebarProvider } from '@/context/SidebarContext'
 
 export default function DashboardLayout({ children }) {
     return (
-        <div className="min-h-screen flex">
-            <Sidebar />
-            <div className="flex-1 flex flex-col ml-64">
-                <Navbar />
-                <main className="flex-1 p-6 overflow-auto">
+        <SidebarProvider>
+            <div className="min-h-screen flex">
+                <Sidebar />
+                <DashboardContent>
                     {children}
-                </main>
+                </DashboardContent>
             </div>
-        </div>
+        </SidebarProvider>
     )
 }

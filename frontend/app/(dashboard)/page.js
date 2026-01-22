@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { TrendingUp, Calculator, Heart, Award, ArrowUpRight, Star, Briefcase, Loader2, Newspaper, Clock, ExternalLink } from 'lucide-react'
+import { TrendingUp, Calculator, Heart, Award, ArrowUpRight, Star, Briefcase, Loader2, Newspaper, Clock, ExternalLink, Quote } from 'lucide-react'
+import { getDailyQuote } from '@/components/DailyQuote'
 
 const topCompanies = [
     { symbol: 'TSLA', name: 'Tesla, Inc.', score: 88, industry: 'Automotive', change: '+5.4%' },
@@ -148,19 +149,34 @@ export default function Dashboard() {
             {/* Same Welcome & Stats ... */}
             {/* ... */}
 
-            <div className="glass-card">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold text-white mb-2">Assalamu'alaikum, {firstName} 👋</h1>
-                        <p className="text-dark-300">Invest ethically. Calculate accurately. Give transparently.</p>
+            {/* Welcome Card with Daily Quote */}
+            {(() => {
+                const quote = getDailyQuote()
+                return (
+                    <div className="glass-card bg-gradient-to-br from-primary-500/10 to-gold-500/10 border-primary-500/20">
+                        <div className="flex items-start justify-between gap-6">
+                            <div className="flex-1">
+                                <h1 className="text-2xl font-bold text-white mb-2">Assalamu'alaikum, {firstName} 👋</h1>
+                                <p className="text-dark-300 mb-4">Invest ethically. Calculate accurately. Give transparently.</p>
+
+                                <div className="flex gap-3 items-start">
+                                    <div className="shrink-0 mt-1">
+                                        <Quote className="w-4 h-4 text-primary-400" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-white/90 italic leading-relaxed">
+                                            "{quote.text}"
+                                        </p>
+                                        <p className="text-xs text-primary-400 mt-2">
+                                            — {quote.source} <span className="text-dark-500">({quote.reference})</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div className="text-right">
-                        <p className="text-sm text-dark-400">Your Zakat Due</p>
-                        <p className="text-2xl font-bold text-gold-400">RM 2,500</p>
-                        <p className="text-xs text-dark-400">in 57 days</p>
-                    </div>
-                </div>
-            </div>
+                )
+            })()}
 
             {/* Stats */}
             <div className="grid grid-cols-4 gap-4">
