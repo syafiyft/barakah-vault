@@ -653,6 +653,19 @@ GET    /api/crowdfunding/projects/:id
 POST   /api/crowdfunding/contribute
 GET    /api/crowdfunding/my-contributions
 
+Portfolio:
+GET    /api/portfolio              (Get user portfolio)
+POST   /api/portfolio              (Add stock position)
+DELETE /api/portfolio/:id          (Remove position)
+
+Stocks:
+GET    /api/stocks/:symbol         (Get stock price & info)
+GET    /api/stocks/search?q=       (Search stocks)
+
+News:
+GET    /api/news                   (Get Islamic finance news)
+GET    /api/news/market            (Get market updates)
+
 Blockchain:
 POST   /api/blockchain/pay
 GET    /api/blockchain/transactions
@@ -725,7 +738,7 @@ contract DonationReceipt {
 
 ---
 
-### **Day 3 (Jan 22) - Polish & Deploy:**
+### **Day 3 (Jan 22) - Portfolio & Final Polish:**
 
 **Morning (4 hours):**
 - ✅ Deploy smart contracts to Mumbai testnet
@@ -733,12 +746,23 @@ contract DonationReceipt {
 - ✅ Blockchain transaction tracking
 
 **Afternoon (4 hours):**
+- ✅ **Portfolio Tracking Feature** (NEW)
+  - Stock position management
+  - Real-time price updates via Stock API
+  - Performance tracking & analytics
+- ✅ **Stock Market API Integration** (NEW)
+  - Real-time stock price data
+  - Company information lookup
+- ✅ **News API Integration** (NEW)
+  - Islamic finance news feed
+  - Market updates & insights
 - ✅ Dashboard integration (all widgets)
 - ✅ Responsive design
 - ✅ Loading states & error handling
-- ✅ Final testing
 
 **Evening (3 hours):**
+- ✅ Crowdfunding image assets updated
+- ✅ Final testing & bug fixes
 - ✅ Record demo video (2-3 min)
 - ✅ Prepare pitch deck
 - ✅ Documentation cleanup
@@ -856,5 +880,5 @@ BarakahVault helps Muslims make ethical investments, fulfill religious obligatio
 
 ---
 
-*Last Updated: January 17, 2026*
-*Version: 2.0 (Revised)*
+*Last Updated: January 22, 2026*
+*Version: 2.1 (Portfolio & APIs Update)*
