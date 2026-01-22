@@ -6,6 +6,7 @@ import {
     Loader2, RefreshCw, Download, Calendar, Wallet, ChevronDown, ChevronUp,
     CheckCircle, Clock, AlertCircle, TrendingUp, Trash2
 } from 'lucide-react'
+import { toast } from 'sonner'
 
 const NISAB_GRAMS = 85
 
@@ -279,9 +280,11 @@ function ZakatCalculator({ onSave, zakatData }) {
             })
             if (res.ok) {
                 onSave()
+                toast.success('Calculation saved successfully')
             }
         } catch (error) {
             console.error('Failed to save:', error)
+            toast.error('Failed to save calculation')
         }
         setSaving(false)
     }
@@ -728,7 +731,7 @@ function TraditionalCalculator({ prices, onRefreshPrices }) {
     })
 
     const goldValue = (parseFloat(assets.gold999) || 0) * (prices?.gold999 || 385) +
-                     (parseFloat(assets.gold916) || 0) * (prices?.gold916 || 352)
+        (parseFloat(assets.gold916) || 0) * (prices?.gold916 || 352)
     const silverValue = (parseFloat(assets.silver) || 0) * (prices?.silver || 3.5)
     const cashValue = parseFloat(assets.cash) || 0
     const savingsValue = parseFloat(assets.savings) || 0
@@ -965,11 +968,10 @@ function CryptoCalculator({ prices }) {
                         <button
                             key={m.id}
                             onClick={() => setMethod(m.id)}
-                            className={`p-3 rounded-xl border text-left transition-all ${
-                                method === m.id
-                                    ? 'border-primary-500 bg-primary-500/10'
-                                    : 'border-dark-700 hover:border-dark-600'
-                            }`}
+                            className={`p-3 rounded-xl border text-left transition-all ${method === m.id
+                                ? 'border-primary-500 bg-primary-500/10'
+                                : 'border-dark-700 hover:border-dark-600'
+                                }`}
                         >
                             <p className={`font-medium ${method === m.id ? 'text-primary-400' : 'text-white'}`}>
                                 {m.label}
@@ -1215,44 +1217,40 @@ export default function ZakatPage() {
             <div className="flex flex-wrap gap-2">
                 <button
                     onClick={() => setActiveTab('portfolio')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
-                        activeTab === 'portfolio'
-                            ? 'bg-primary-500 text-white'
-                            : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
-                    }`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${activeTab === 'portfolio'
+                        ? 'bg-primary-500 text-white'
+                        : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
+                        }`}
                 >
                     <Wallet className="w-4 h-4" />
                     Portfolio
                 </button>
                 <button
                     onClick={() => setActiveTab('traditional')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
-                        activeTab === 'traditional'
-                            ? 'bg-gold-500 text-dark-900'
-                            : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
-                    }`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${activeTab === 'traditional'
+                        ? 'bg-gold-500 text-dark-900'
+                        : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
+                        }`}
                 >
                     <Coins className="w-4 h-4" />
                     Traditional
                 </button>
                 <button
                     onClick={() => setActiveTab('crypto')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
-                        activeTab === 'crypto'
-                            ? 'bg-orange-500 text-white'
-                            : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
-                    }`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${activeTab === 'crypto'
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
+                        }`}
                 >
                     <Bitcoin className="w-4 h-4" />
                     Crypto
                 </button>
                 <button
                     onClick={() => setActiveTab('history')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
-                        activeTab === 'history'
-                            ? 'bg-primary-500 text-white'
-                            : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
-                    }`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${activeTab === 'history'
+                        ? 'bg-primary-500 text-white'
+                        : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
+                        }`}
                 >
                     <History className="w-4 h-4" />
                     History
@@ -1276,7 +1274,7 @@ export default function ZakatPage() {
             ) : (
                 <ZakatHistory
                     records={zakatData?.records}
-                    onMarkPaid={() => {}}
+                    onMarkPaid={() => { }}
                     onRefresh={fetchZakatData}
                 />
             )}
