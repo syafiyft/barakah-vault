@@ -1,5 +1,6 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { Toaster } from 'sonner'
 import { Providers } from './providers'
 import Navbar from '@/components/Navbar'
 import Sidebar from '@/components/Sidebar'
@@ -28,6 +29,7 @@ export default function RootLayout({ children }) {
       <body className={inter.variable}>
         <Providers>
           {children}
+          <Toaster position="top-right" richColors />
         </Providers>
       </body>
     </html>
